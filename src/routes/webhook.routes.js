@@ -7,4 +7,8 @@ router.get('/webhook', createWebhook)
 
 router.post('/webhook', getMessage)
 
+router.get('/auth/facebook/callback', (req, res) => {
+    res.send('OK')
+})
+
 export default router

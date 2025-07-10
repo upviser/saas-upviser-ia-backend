@@ -1,6 +1,7 @@
 import MessengerMessage from '../models/MessengerChat.js'
 import axios from 'axios'
 import Integration from '../models/Integrations.js'
+import ShopLogin from '../models/ShopLogin.js'
 
 export const getMessengerIds = async (req, res) => {
     try {
@@ -83,4 +84,58 @@ export const viewMessage = async (req, res) => {
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
+}
+
+export const MessengerToken = async (req, res) => {
+  const { userToken, email } = req.body;
+  if (!userToken) return res.status(400).json({ error: 'No se recibió token.' });
+
+  try {
+    // 1. Intercambio a token largo
+    const longUser = (await axios.get('https://graph.facebook.com/v20.0/oauth/access_token', {
+      params: {
+        grant_type: 'fb_exchange_token',
+        client_id: process.env.FB_APP_ID,
+        client_secret: process.env.FB_APP_SECRET,
+        fb_exchange_token: userToken
+      }
+    })).data;
+    const longLivedUserToken = longUser.access_token;
+
+    // 2. Obtener página y token
+    const pagesRes = await axios.get('https://graph.facebook.com/v20.0/me/accounts', {
+      params: { access_token: longLivedUserToken }
+    });
+    const page = pagesRes.data.data[0];
+    if (!page) return res.status(400).json({ error: 'No hay páginas disponibles.' });
+
+    const longLivedPageToken = page.access_token;
+    const pageId = page.id;
+
+    // 3. Obtener ID de Instagram
+    const igRes = await axios.get(`https://graph.facebook.com/v20.0/${pageId}`, {
+      params: {
+        fields: 'instagram_business_account',
+        access_token: longLivedPageToken
+      }
+    });
+    const igId = igRes.data.instagram_business_account?.id;
+    if (!igId) return res.status(400).json({ error: 'Sin cuenta IG vinculada.' });
+
+    // 4. Guardar en BD
+    const integrations = await Integration.findOne().lean();
+    await Integration.findByIdAndUpdate(integrations._id, {
+      messengerToken: longLivedPageToken,
+      idPage: pageId,
+      idInstagram: igId
+    });
+
+    const shopLogin = await ShopLogin.findOne({ type: 'Administrador' }).lean()
+    await axios.post(`${process.env.MAIN_API_URL}/user`, { email: shopLogin.email, api: process.env.NEXT_PUBLIC_API_URL, idPage: pageId, idInstagram: igId });
+
+    res.status(200).json({ success: 'OK' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 }

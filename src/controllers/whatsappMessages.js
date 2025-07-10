@@ -1,6 +1,7 @@
 import WhatsappChat from '../models/WhatsappChat.js'
 import axios from "axios"
 import Integration from '../models/Integrations.js'
+import ShopLogin from '../models/ShopLogin.js'
 
 export const getPhones = async (req, res) => {
     try {
@@ -82,3 +83,34 @@ export const viewMessage = async (req, res) => {
         return res.status(500).json({message: error.message})
     }
 }
+
+export const whatsappToken = async (req, res) => {
+  try {
+    const { code, phone_number_id } = req.body
+
+    const tokenRes = await axios.get('https://graph.facebook.com/v20.0/oauth/access_token', {
+      params: {
+        client_id: process.env.FB_APP_ID,
+        client_secret: process.env.FB_APP_SECRET,
+        redirect_uri: process.env.FB_REDIRECT_URI,
+        code,
+      },
+    });
+
+    const { access_token } = tokenRes.data;
+
+    const integrations = await Integration.findOne().lean();
+    await Integration.findByIdAndUpdate(integrations._id, {
+      whatsappToken: access_token,
+      idPhone: phone_number_id,
+    }, { new: true });
+
+    const shopLogin = await ShopLogin.findOne({ type: 'Administrador' }).lean()
+    await axios.post(`${process.env.MAIN_API_URL}/user`, { email: shopLogin.email, api: process.env.NEXT_PUBLIC_API_URL, idPhone: phone_number_id })
+
+    res.status(200).json({ success: 'OK' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
