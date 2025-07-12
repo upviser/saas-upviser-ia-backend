@@ -1,7 +1,7 @@
+import ShopLogin from '../models/ShopLogin.js'
 import MessengerMessage from '../models/MessengerChat.js'
 import axios from 'axios'
 import Integration from '../models/Integrations.js'
-import ShopLogin from '../models/ShopLogin.js'
 
 export const getMessengerIds = async (req, res) => {
     try {
@@ -87,7 +87,7 @@ export const viewMessage = async (req, res) => {
 }
 
 export const MessengerToken = async (req, res) => {
-  const { userToken, email } = req.body;
+  const { userToken } = req.body;
   if (!userToken) return res.status(400).json({ error: 'No se recibió token.' });
 
   try {

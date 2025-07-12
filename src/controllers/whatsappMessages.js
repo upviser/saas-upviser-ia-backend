@@ -86,7 +86,7 @@ export const viewMessage = async (req, res) => {
 
 export const whatsappToken = async (req, res) => {
   try {
-    const { code, phone_number_id } = req.body
+    const { code, phone_number_id, waba_id } = req.body
 
     const tokenRes = await axios.get('https://graph.facebook.com/v20.0/oauth/access_token', {
       params: {
@@ -98,6 +98,10 @@ export const whatsappToken = async (req, res) => {
     });
 
     const { access_token } = tokenRes.data;
+
+    await axios.post(`https://graph.facebook.com/v20.0/${waba_id}/subscribed_apps`, null, {
+      params: { access_token },
+    });
 
     const integrations = await Integration.findOne().lean();
     await Integration.findByIdAndUpdate(integrations._id, {
