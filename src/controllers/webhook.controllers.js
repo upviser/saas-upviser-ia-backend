@@ -15,6 +15,7 @@ import Integration from '../models/Integrations.js'
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import ShopLogin from '../models/ShopLogin.js'
+import Notification from "../models/Notification.js"
 
 export const createWebhook = async (req, res) => {
     const storeData = await StoreData.findOne().lean()
@@ -39,6 +40,9 @@ export const getMessage = async (req, res) => {
                     const newMessage = new WhatsappMessage({phone: number, message: message, agent: true, view: false})
                     await newMessage.save()
                     io.emit('whatsapp', newMessage)
+                    const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Whatsapp', url: '/mensajes', view: false })
+                    await notification.save()
+                    io.emit('newNotification')
                     return res.sendStatus(200)
                 } else {
                     const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
@@ -319,7 +323,10 @@ export const getMessage = async (req, res) => {
                 if ((messages && messages.length && messages[0].agent) || shopLogin.conversationsAI < 1) {
                     const newMessage = new MessengerMessage({messengerId: sender, message: message, agent: true, view: false})
                     await newMessage.save()
-                    io.emit('whatsapp', newMessage)
+                    io.emit('messenger', newMessage)
+                    const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Messenger', url: '/mensajes', view: false })
+                    await notification.save()
+                    io.emit('newNotification')
                     return res.sendStatus(200)
                 } else {
                     const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
@@ -610,7 +617,10 @@ export const getMessage = async (req, res) => {
                 if ((messages && messages.length && messages[0].agent) || shopLogin.conversationsAI < 1) {
                     const newMessage = new InstagramMessage({instagramId: sender, message: message, agent: true, view: false})
                     await newMessage.save()
-                    io.emit('whatsapp', newMessage)
+                    io.emit('instagram', newMessage)
+                    const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Instagram', url: '/mensajes', view: false })
+                    await notification.save()
+                    io.emit('newNotification')
                     return res.sendStatus(200)
                 } else {
                     const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
