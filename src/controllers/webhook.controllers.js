@@ -90,7 +90,7 @@ export const getMessage = async (req, res) => {
                         const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Whatsapp', url: '/mensajes', view: false })
                         await notification.save()
                         io.emit('newNotification')
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('productos')) {
                         products = await Product.find().lean()
@@ -379,7 +379,7 @@ export const getMessage = async (req, res) => {
                         const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Messenger', url: '/mensajes', view: false })
                         await notification.save()
                         io.emit('newNotification')
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('productos')) {
                         products = await Product.find().lean()
@@ -676,7 +676,7 @@ export const getMessage = async (req, res) => {
                         const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Instagram', url: '/mensajes', view: false })
                         await notification.save()
                         io.emit('newNotification')
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('productos')) {
                         products = await Product.find().lean()
