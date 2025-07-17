@@ -127,13 +127,38 @@ export const MessengerToken = async (req, res) => {
     const igId = igRes.data.instagram_business_account?.id;
     if (!igId) return res.status(400).json({ error: 'Sin cuenta IG vinculada.' });
 
+    await axios.post(`https://graph.facebook.com/v20.0/${pageId}/subscribed_apps`, null, {
+      params: {
+        access_token: longLivedPageToken,
+        subscribed_fields: 'messages,messaging_postbacks'
+      }
+    });
+
+    await axios.post(`https://graph.facebook.com/v20.0/${pageId}/subscribed_apps`, null, {
+      params: {
+        access_token: longLivedPageToken,
+        subscribed_fields: 'messages'
+      }
+    });
+
     // 4. Guardar en BD
     const integrations = await Integration.findOne().lean();
-    await Integration.findByIdAndUpdate(integrations._id, {
-      messengerToken: longLivedPageToken,
-      idPage: pageId,
-      idInstagram: igId
-    });
+    if (integrations) {
+        await Integration.findByIdAndUpdate(integrations._id, {
+            messengerToken: longLivedPageToken,
+            idPage: pageId,
+            idInstagram: igId,
+            userAccessToken: longLivedUserToken
+        });
+    } else {
+        const newIntegration = new Integration({
+            messengerToken: longLivedPageToken,
+            idPage: pageId,
+            idInstagram: igId,
+            userAccessToken: longLivedUserToken
+        })
+        await newIntegration.save()
+    }
 
     const shopLogin = await ShopLogin.findOne({ type: 'Administrador' }).lean()
     await axios.post(`${process.env.MAIN_API_URL}/user`, { email: shopLogin.email, api: process.env.NEXT_PUBLIC_API_URL, idPage: pageId, idInstagram: igId });
@@ -143,4 +168,18 @@ export const MessengerToken = async (req, res) => {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
+}
+
+export const DisconnectFacebook = async (req, res) => {
+    try {
+        const integrations = await Integration.findOne().lean()
+        const revokeRes = await axios.delete('https://graph.facebook.com/me/permissions', {
+            params: { access_token: integrations.userAccessToken }
+        });
+
+        await Integration.findOneAndUpdate({ messengerToken: '', idPage: '', idInstagram: '' })
+        return res.json({ success: 'OK' })
+    } catch (error) {
+        return res.status(500).json({ error: error });
+    }
 }

@@ -6,6 +6,7 @@ const IntegrationsSchema = new mongoose.Schema({
     idPage: { type: String },
     idInstagram: { type: String },
     messengerToken: { type: String },
+    userAccessToken: { type: String },
     apiToken: { type: String },
     apiPixelId: { type: String },
     googleAnalytics: { type: String }
