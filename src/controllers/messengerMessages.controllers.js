@@ -173,11 +173,13 @@ export const MessengerToken = async (req, res) => {
 export const DisconnectFacebook = async (req, res) => {
     try {
         const integrations = await Integration.findOne().lean()
-        const revokeRes = await axios.delete('https://graph.facebook.com/me/permissions', {
+        await axios.delete('https://graph.facebook.com/me/permissions', {
             params: { access_token: integrations.userAccessToken }
         });
 
-        await Integration.findOneAndUpdate({ messengerToken: '', idPage: '', idInstagram: '' })
+        await Integration.findOneAndUpdate({ messengerToken: '', idPage: '', idInstagram: '', userAccessToken: '' })
+        const shopLogin = await ShopLogin.findOne({ type: 'Administrador' }).lean()
+        await axios.post(`${process.env.NEXT_PUBLIC_MAIN_API_URL}/user`, { email: shopLogin.email, api: process.env.NEXT_PUBLIC_API_URL, idPage: '', idInstagram: '' })
         return res.json({ success: 'OK' })
     } catch (error) {
         return res.status(500).json({ error: error });
