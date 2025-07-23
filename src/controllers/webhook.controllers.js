@@ -657,16 +657,16 @@ export const getMessage = async (req, res) => {
                     });
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
-                        await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
+                        await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                             "recipient": {
                                 "id": sender
                             },
-                            "messaging_type": "RESPONSE",
                             "message": {
                                 "text": 'Te estoy transfieriendo con alguien de soporte en este momento'
                             }
                         }, {
                             headers: {
+                                'Authorization': `Bearer ${integration.instagramToken}`,
                                 'Content-Type': 'application/json'
                             }
                         })
@@ -808,16 +808,16 @@ export const getMessage = async (req, res) => {
                         }).filter(Boolean);
                         await Cart.findOneAndUpdate({ phone: number }, { cart: enrichedCart })
                         if (act.output_parsed.ready) {
-                            await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
+                            await axios.post(`https://graph.instagram.com/v23.0/${integration.inInstagram}/messages`, {
                                 "recipient": {
                                     "id": sender
                                 },
-                                "messaging_type": "RESPONSE",
                                 "message": {
                                     "text": `Perfecto, para realizar tu compra toca en el siguiente enlace: https://${process.env.WEB_URL}/finalizar-compra`
                                 }
                             }, {
                                 headers: {
+                                    'Authorization': `Bearer ${integration.instagramToken}`,
                                     'Content-Type': 'application/json'
                                 }
                             })
@@ -840,16 +840,16 @@ export const getMessage = async (req, res) => {
                                 presence_penalty: 0,
                                 store: false
                             });
-                            await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
+                            await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                                 "recipient": {
                                     "id": sender
                                 },
-                                "messaging_type": "RESPONSE",
                                 "message": {
                                     "text": get.choices[0].message.content
                                 }
                             }, {
                                 headers: {
+                                    'Authorization': `Bearer ${integration.instagramToken}`,
                                     'Content-Type': 'application/json'
                                 }
                             })
@@ -874,16 +874,16 @@ export const getMessage = async (req, res) => {
                             presence_penalty: 0,
                             store: false
                         });
-                        await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
+                        await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                             "recipient": {
                                 "id": sender
                             },
-                            "messaging_type": "RESPONSE",
                             "message": {
                                 "text": response.choices[0].message.content
                             }
                         }, {
                             headers: {
+                                'Authorization': `Bearer ${integration.instagramToken}`,
                                 'Content-Type': 'application/json'
                             }
                         })
@@ -891,16 +891,16 @@ export const getMessage = async (req, res) => {
                         await newMessage.save()
                         return res.send(newMessage)
                     } else {
-                        await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
+                        await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                             "recipient": {
                                 "id": sender
                             },
-                            "messaging_type": "RESPONSE",
                             "message": {
                                 "text": 'Lo siento, no tengo la información necesaria para responder tu pregunta, si quieres te puedo transferir con alguien de soporte para que te pueda ayudar'
                             }
                         }, {
                             headers: {
+                                'Authorization': `Bearer ${integration.instagramToken}`,
                                 'Content-Type': 'application/json'
                             }
                         })
@@ -916,6 +916,87 @@ export const getMessage = async (req, res) => {
             return res.sendStatus(200)
         }
     } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
+}
+
+export const callbackFacebook = async (req, res) => {
+    try {
+        const { code } = req.query;
+
+        const response = await axios.post(
+            'https://api.instagram.com/oauth/access_token', qs.stringify({
+                client_id: process.env.IG_APP_ID,
+                client_secret: process.env.IG_APP_SECRET,
+                grant_type: 'authorization_code',
+                redirect_uri: process.env.FB_REDIRECT_URI,
+                code,
+            }),
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            }
+        );
+
+        const { access_token, user_id } = response.data;
+
+        // Intercambiar el token de corta duración por uno de larga duración
+        const longLivedTokenResponse = await axios.get(
+            `https://graph.instagram.com/access_token`,
+            {
+                params: {
+                    grant_type: 'ig_exchange_token',
+                    client_secret: process.env.IG_APP_SECRET,
+                    access_token,
+                },
+            }
+        );
+
+        const longLivedAccessToken = longLivedTokenResponse.data.access_token;
+
+        // Obtener el ID de la cuenta de Instagram
+        const accountResponse = await axios.get(
+            `https://graph.instagram.com/v23.0/me`,
+            {
+                params: {
+                    fields: 'user_id',
+                    access_token: longLivedAccessToken,
+                },
+            }
+        );
+
+        const { user_id: instagramBusinessAccountId } = accountResponse.data;
+
+        // Suscribirse al webhook de mensajes
+        await axios.post(
+            `https://graph.instagram.com/v23.0/${instagramBusinessAccountId}/subscribed_apps`,
+            null,
+            {
+                params: {
+                    subscribed_fields: 'messages',
+                    access_token: longLivedAccessToken,
+                },
+            }
+        );
+
+        const integrations = await Integration.findOne().lean();
+        if (integrations) {
+            await Integration.findByIdAndUpdate(integrations._id, {
+                instagramToken: longLivedAccessToken,
+                idInstagram: instagramBusinessAccountId
+            });
+        } else {
+            const newIntegration = new Integration({
+                instagramToken: longLivedAccessToken,
+                idInstagram: instagramBusinessAccountId
+            })
+            await newIntegration.save()
+        }
+    
+        res.status(200).json({ success: 'OK' });
+    } catch (error) {
+        console.log(error.response.data)
         return res.status(500).json({message: error.message})
     }
 }

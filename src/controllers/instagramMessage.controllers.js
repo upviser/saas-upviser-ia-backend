@@ -89,3 +89,24 @@ export const viewMessage = async (req, res) => {
         return res.status(500).json({message: error.message})
     }
 }
+
+export const deleteInstagram = async (req, res) => {
+    try {
+        const integrations = await Integration.findOne().lean()
+        await axios.delete(
+            `https://graph.instagram.com/v23.0/${integrations.idInstagram}/subscribed_apps`,
+            {
+                params: {
+                    subscribed_fields: 'messages',
+                    access_token: integrations.instagramToken,
+                },
+            }
+        );
+        await Integration.findByIdAndUpdate(integrations._id, { idInstagram: '', instagramToken: '' })
+        const shopLogin = await ShopLogin.findOne({ type: 'Administrador' }).lean()
+                await axios.post(`${process.env.MAIN_API_URL}/user`, { email: shopLogin.email, api: process.env.NEXT_PUBLIC_API_URL, idInstagram: '' })
+        return res.json({ success: 'OK' })
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
+}
