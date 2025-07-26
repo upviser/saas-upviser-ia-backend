@@ -141,8 +141,7 @@ export const MessengerToken = async (req, res) => {
         await newIntegration.save()
     }
 
-    const shopLogin = await ShopLogin.findOne({ type: 'Administrador' }).lean()
-    await axios.post(`${process.env.MAIN_API_URL}/user`, { email: shopLogin.email, api: process.env.API_URL, idPage: pageId });
+    await axios.post(`${process.env.MAIN_API_URL}/user`, { api: process.env.API_URL, idPage: pageId });
 
     res.status(200).json({ success: 'OK' });
   } catch (err) {
