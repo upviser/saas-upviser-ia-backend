@@ -94,7 +94,6 @@ export const viewMessage = async (req, res) => {
 export const MessengerToken = async (req, res) => {
   const { userToken } = req.body;
   if (!userToken) return res.status(400).json({ error: 'No se recibió token.' });
-  console.log(userToken)
 
   try {
     // 1. Intercambio a token largo
@@ -106,14 +105,12 @@ export const MessengerToken = async (req, res) => {
         fb_exchange_token: userToken
       }
     })).data;
-    console.log(longUser)
     const longLivedUserToken = longUser.access_token;
 
     // 2. Obtener página y token
     const pagesRes = await axios.get('https://graph.facebook.com/v20.0/me/accounts', {
       params: { access_token: longLivedUserToken }
     });
-    console.log(pagesRes.data)
     const page = pagesRes.data.data[0];
     if (!page) return res.status(400).json({ error: 'No hay páginas disponibles.' });
 
