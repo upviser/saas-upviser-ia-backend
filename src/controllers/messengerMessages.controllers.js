@@ -94,6 +94,7 @@ export const viewMessage = async (req, res) => {
 export const MessengerToken = async (req, res) => {
   const { userToken } = req.body;
   if (!userToken) return res.status(400).json({ error: 'No se recibió token.' });
+  console.log(userToken)
 
   try {
     // 1. Intercambio a token largo
@@ -105,39 +106,24 @@ export const MessengerToken = async (req, res) => {
         fb_exchange_token: userToken
       }
     })).data;
+    console.log(longUser)
     const longLivedUserToken = longUser.access_token;
 
     // 2. Obtener página y token
     const pagesRes = await axios.get('https://graph.facebook.com/v20.0/me/accounts', {
       params: { access_token: longLivedUserToken }
     });
+    console.log(pagesRes.data)
     const page = pagesRes.data.data[0];
     if (!page) return res.status(400).json({ error: 'No hay páginas disponibles.' });
 
     const longLivedPageToken = page.access_token;
     const pageId = page.id;
 
-    // 3. Obtener ID de Instagram
-    const igRes = await axios.get(`https://graph.facebook.com/v20.0/${pageId}`, {
-      params: {
-        fields: 'instagram_business_account',
-        access_token: longLivedPageToken
-      }
-    });
-    const igId = igRes.data.instagram_business_account?.id;
-    if (!igId) return res.status(400).json({ error: 'Sin cuenta IG vinculada.' });
-
     await axios.post(`https://graph.facebook.com/v20.0/${pageId}/subscribed_apps`, null, {
       params: {
         access_token: longLivedPageToken,
         subscribed_fields: 'messages,messaging_postbacks'
-      }
-    });
-
-    await axios.post(`https://graph.facebook.com/v20.0/${pageId}/subscribed_apps`, null, {
-      params: {
-        access_token: longLivedPageToken,
-        subscribed_fields: 'messages'
       }
     });
 
@@ -147,21 +133,19 @@ export const MessengerToken = async (req, res) => {
         await Integration.findByIdAndUpdate(integrations._id, {
             messengerToken: longLivedPageToken,
             idPage: pageId,
-            idInstagram: igId,
             userAccessToken: longLivedUserToken
         });
     } else {
         const newIntegration = new Integration({
             messengerToken: longLivedPageToken,
             idPage: pageId,
-            idInstagram: igId,
             userAccessToken: longLivedUserToken
         })
         await newIntegration.save()
     }
 
     const shopLogin = await ShopLogin.findOne({ type: 'Administrador' }).lean()
-    await axios.post(`${process.env.MAIN_API_URL}/user`, { email: shopLogin.email, api: process.env.NEXT_PUBLIC_API_URL, idPage: pageId, idInstagram: igId });
+    await axios.post(`${process.env.MAIN_API_URL}/user`, { email: shopLogin.email, api: process.env.NEXT_PUBLIC_API_URL, idPage: pageId });
 
     res.status(200).json({ success: 'OK' });
   } catch (err) {
