@@ -324,6 +324,7 @@ export const getMessage = async (req, res) => {
             const sender = req.body.entry[0].messaging[0].sender.id
             console.log(sender)
             if (integration.messengerToken) {
+                console.log('token')
                 const messages = await MessengerMessage.find({messengerId: sender}).select('-messengerId -_id').sort({ createdAt: -1 }).limit(2).lean()
                 if ((messages && messages.length && messages[0].agent) || shopLogin.conversationsAI < 1) {
                     const newMessage = new MessengerMessage({messengerId: sender, message: message, agent: true, view: false})
@@ -334,6 +335,7 @@ export const getMessage = async (req, res) => {
                     io.emit('newNotification')
                     return res.sendStatus(200)
                 } else {
+                    console.log('agente')
                     const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
                     let products
                     const context = messages.flatMap(ult => {
