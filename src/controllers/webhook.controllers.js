@@ -30,6 +30,7 @@ export const getMessage = async (req, res) => {
     try {
         const integration = await Integration.findOne().lean()
         const shopLogin = await ShopLogin.findOne({ type: 'administrador' })
+        console.log(req.body)
         if (req.body?.entry && req.body.entry[0]?.changes && req.body.entry[0].changes[0]?.value?.messages && 
             req.body.entry[0].changes[0].value.messages[0]?.text && req.body.entry[0].changes[0].value.messages[0].text.body) {  
             const message = req.body.entry[0].changes[0].value.messages[0].text.body
@@ -321,6 +322,7 @@ export const getMessage = async (req, res) => {
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text && req.body.entry[0].id === integration.idPage) {
             const message = req.body.entry[0].messaging[0].message.text
             const sender = req.body.entry[0].messaging[0].sender.id
+            console.log(sender)
             if (integration.messengerToken) {
                 const messages = await MessengerMessage.find({messengerId: sender}).select('-messengerId -_id').sort({ createdAt: -1 }).limit(2).lean()
                 if ((messages && messages.length && messages[0].agent) || shopLogin.conversationsAI < 1) {
@@ -358,6 +360,7 @@ export const getMessage = async (req, res) => {
                             format: zodTextFormat(TypeSchema, "type"),
                         },
                     })
+                    console.log(type.output_parsed)
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
@@ -577,6 +580,7 @@ export const getMessage = async (req, res) => {
                             presence_penalty: 0,
                             store: false
                         });
+                        console.log(response.choices[0].message.content)
                         await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
                             "recipient": {
                                 "id": sender
