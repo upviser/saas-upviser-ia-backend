@@ -30,6 +30,7 @@ export const getMessage = async (req, res) => {
     try {
         const integration = await Integration.findOne().lean()
         const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
+        console.log(req.body)
         if (req.body?.entry && req.body.entry[0]?.changes && req.body.entry[0].changes[0]?.value?.messages && 
             req.body.entry[0].changes[0].value.messages[0]?.text && req.body.entry[0].changes[0].value.messages[0].text.body) {  
             const message = req.body.entry[0].changes[0].value.messages[0].text.body
@@ -616,9 +617,11 @@ export const getMessage = async (req, res) => {
                 return res.json({ message: 'Error: No existe el token de la app para Messenger' })
             }
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text) {
+            console.log('instagram')
             const message = req.body.entry[0].messaging[0].message.text
             const sender = req.body.entry[0].messaging[0].sender.id
-            if (integration.messengerToken) {
+            if (integration.instagramToken) {
+                console.log('token')
                 const messages = await InstagramMessage.find({instagramId: sender}).select('-instagramId -_id').sort({ createdAt: -1 }).limit(2).lean()
                 if ((messages && messages.length && messages[0].agent) || shopLogin.conversationsAI < 1) {
                     const newMessage = new InstagramMessage({instagramId: sender, message: message, agent: true, view: false})
@@ -629,6 +632,7 @@ export const getMessage = async (req, res) => {
                     io.emit('newNotification')
                     return res.sendStatus(200)
                 } else {
+                    console.log('agente')
                     const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
                     let products
                     const context = messages.flatMap(ult => {
@@ -655,6 +659,7 @@ export const getMessage = async (req, res) => {
                             format: zodTextFormat(TypeSchema, "type"),
                         },
                     });
+                    console.log(type.output_parsed)
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
@@ -874,6 +879,7 @@ export const getMessage = async (req, res) => {
                             presence_penalty: 0,
                             store: false
                         });
+                        console.log(response.choices[0].message.content)
                         await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                             "recipient": {
                                 "id": sender
@@ -994,7 +1000,7 @@ export const callbackFacebook = async (req, res) => {
             await newIntegration.save()
         }
     
-        res.status(200).json({ success: 'OK' });
+        res.status(200).json({ success: 'Conectado correctamente, hacer clic en "Probar conexión" o recargar la pagina del panel administrativo para verificarlo.' });
     } catch (error) {
         console.log(error.response.data)
         return res.status(500).json({message: error.message})
