@@ -93,6 +93,8 @@ export const whatsappToken = async (req, res) => {
   try {
     const { code, phone_number_id, waba_id } = req.body
 
+    console.log(req.body)
+
     const tokenRes = await axios.get('https://graph.facebook.com/v20.0/oauth/access_token', {
       params: {
         client_id: process.env.FB_APP_ID,
@@ -101,6 +103,8 @@ export const whatsappToken = async (req, res) => {
         code,
       },
     });
+
+    console.log(tokenRes.data)
 
     const { access_token } = tokenRes.data;
 
@@ -112,6 +116,8 @@ export const whatsappToken = async (req, res) => {
             fb_exchange_token: access_token, // token corto recién obtenido
         }
     });
+
+    console.log(longLivedRes.data)
 
     const longLivedToken = longLivedRes.data.access_token;
 
