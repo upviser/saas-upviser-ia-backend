@@ -89,58 +89,6 @@ export const viewMessage = async (req, res) => {
     }
 }
 
-export const whatsappToken = async (req, res) => {
-  try {
-    const { code, phone_number_id, waba_id } = req.body
-
-    console.log(req.body)
-
-    const tokenRes = await axios.get('https://graph.facebook.com/v20.0/oauth/access_token', {
-      params: {
-        client_id: process.env.FB_APP_ID,
-        client_secret: process.env.FB_APP_SECRET,
-        redirect_uri: process.env.FB_REDIRECT_URI,
-        code,
-      },
-    });
-
-    console.log(tokenRes.data)
-
-    const { access_token } = tokenRes.data;
-
-    const longLivedRes = await axios.get('https://graph.facebook.com/v20.0/oauth/access_token', {
-        params: {
-            grant_type: 'fb_exchange_token',
-            client_id: process.env.FB_APP_ID,
-            client_secret: process.env.FB_APP_SECRET,
-            fb_exchange_token: access_token, // token corto recién obtenido
-        }
-    });
-
-    console.log(longLivedRes.data)
-
-    const longLivedToken = longLivedRes.data.access_token;
-
-    await axios.post(`https://graph.facebook.com/v20.0/${waba_id}/subscribed_apps`, null, {
-      params: { access_token: longLivedToken },
-    });
-
-    const integrations = await Integration.findOne().lean();
-    await Integration.findByIdAndUpdate(integrations._id, {
-      whatsappToken: longLivedToken,
-      idPhone: phone_number_id,
-      waba: waba_id
-    }, { new: true });
-
-    await axios.post(`${process.env.MAIN_API_URL}/user`, { api: process.env.API_URL, idPhone: phone_number_id })
-
-    res.status(200).json({ success: 'OK' });
-  } catch (error) {
-    console.error(error.response.data);
-    res.status(500).json({ message: error.message });
-  }
-};
-
 export const createTemplate = async (req, res) => {
     try {
         const integrations = await Integration.findOne().lean()
