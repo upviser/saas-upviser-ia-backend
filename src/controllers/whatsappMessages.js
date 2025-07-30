@@ -136,7 +136,7 @@ export const whatsappToken = async (req, res) => {
 
     res.status(200).json({ success: 'OK' });
   } catch (error) {
-    console.error(error);
+    console.error(error.response.data);
     res.status(500).json({ message: error.message });
   }
 };
