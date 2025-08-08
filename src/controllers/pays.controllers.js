@@ -10,8 +10,8 @@ import Service from '../models/Service.js'
 export const createPay = async (req, res) => {
     try {
         const integrations = await Integrations.findOne().lean()
-        if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
-            if (req.body.state === 'Pago iniciado' || req.body.state === 'Segundo pago iniciado') {
+        if (req.body.state === 'Pago iniciado' || req.body.state === 'Segundo pago iniciado') {
+            if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
                 const EventRequest = bizSdk.EventRequest
@@ -58,7 +58,9 @@ export const createPay = async (req, res) => {
                         console.error('Error: ', err)
                     }
                 )
-            } else if (req.body.state === 'Pago realizado' || req.body.state === 'Segundo pago realizado') {
+            }
+        } else if (req.body.state === 'Pago realizado' || req.body.state === 'Segundo pago realizado') {
+            if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
                 const EventRequest = bizSdk.EventRequest
@@ -105,18 +107,11 @@ export const createPay = async (req, res) => {
                         console.error('Error: ', err)
                     }
                 )
-                const storeData = await StoreData.findOne().lean()
-                const style = await Style.findOne().lean()
-                const services = await Service.find().lean()
-                sendEmailBuyBrevo({ pay: req.body.pay, storeData: storeData, style: style, services: services })
             }
-        } else {
-            if (req.body.state === 'Pago realizado' || req.body.state === 'Segundo pago realizado') { 
-                const storeData = await StoreData.findOne().lean()
-                const style = await Style.findOne().lean()
-                const services = await Service.find().lean()
-                sendEmailBuyBrevo({ pay: req.body.pay, storeData: storeData, style: style, services: services })
-            }
+            const storeData = await StoreData.findOne().lean()
+            const style = await Style.findOne().lean()
+            const services = await Service.find().lean()
+            sendEmailBuyBrevo({ pay: req.body.pay, storeData: storeData, style: style, services: services })
         }
         const newPay = new Pay(req.body)
         const newPaySave = await newPay.save()
