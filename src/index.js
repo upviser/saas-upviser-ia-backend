@@ -6,6 +6,7 @@ import http from 'http'
 import {Server as SocketServer} from 'socket.io'
 import { loadTasks } from './utils/tasks.js'
 import ShopLogin from './models/ShopLogin.js'
+import cron from 'node-cron'
 
 import contactRoutes from './routes/contact.routes.js'
 import clientTagRoutes from './routes/clientTag.routes.js'
@@ -98,15 +99,17 @@ cron.schedule("0 0 1 * *", async () => {
 
     const account = await ShopLogin.findOne({ type: 'Administrador' }).lean()
 
-    const limitDiario = account.plan === 'Esencial' ? 100 : account.plan === 'Avanzado' ? 200 : account.plan === 'Profesional' ? 300 : 0
-    const emailsMensuales = days * limitDiario
+    if (account) {
+        const limitDiario = account.plan === 'Esencial' ? 100 : account.plan === 'Avanzado' ? 200 : account.plan === 'Profesional' ? 300 : 0
+        const emailsMensuales = days * limitDiario
 
-    await ShopLogin.findByIdAndUpdate(account._id, {
-        emails: emailsMensuales,
-        images: account.plan === 'Esencial' ? 40 : account.plan === 'Avanzado' ? 80 : account.plan === 'Profesional' ? 120 : 0,
-        videos: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
-        chats: account.plan === 'Esencial' ? 500 : account.plan === 'Avanzado' ? 1000 : account.plan === 'Profesional' ? 2000 : 0
-    })
+        await ShopLogin.findByIdAndUpdate(account._id, {
+            emails: emailsMensuales,
+            images: account.plan === 'Esencial' ? 40 : account.plan === 'Avanzado' ? 80 : account.plan === 'Profesional' ? 120 : 0,
+            videos: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
+            chats: account.plan === 'Esencial' ? 500 : account.plan === 'Avanzado' ? 1000 : account.plan === 'Profesional' ? 2000 : 0
+        })
+    }
 })
 
 app.use(contactRoutes)
