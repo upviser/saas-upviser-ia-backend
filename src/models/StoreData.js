@@ -7,6 +7,7 @@ const StoreDataSchema = mongoose.Schema({
   phone: { type: Number },
   logo: { type: String },
   logoWhite: { type: String },
+  favicon: { type: String },
   instagram: { type: String },
   facebook: { type: String },
   tiktok: { type: String },
