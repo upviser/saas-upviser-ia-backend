@@ -105,9 +105,9 @@ cron.schedule("0 0 1 * *", async () => {
 
         await ShopLogin.findByIdAndUpdate(account._id, {
             emails: emailsMensuales,
-            images: account.plan === 'Esencial' ? 40 : account.plan === 'Avanzado' ? 80 : account.plan === 'Profesional' ? 120 : 0,
-            videos: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
-            chats: account.plan === 'Esencial' ? 500 : account.plan === 'Avanzado' ? 1000 : account.plan === 'Profesional' ? 2000 : 0
+            imagesAI: account.plan === 'Esencial' ? 40 : account.plan === 'Avanzado' ? 80 : account.plan === 'Profesional' ? 120 : 0,
+            videosAI: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
+            conversationsAI: account.plan === 'Esencial' ? 500 : account.plan === 'Avanzado' ? 1000 : account.plan === 'Profesional' ? 2000 : 0
         })
     }
 })
