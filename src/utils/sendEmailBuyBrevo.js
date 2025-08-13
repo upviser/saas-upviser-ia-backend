@@ -127,14 +127,14 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services 
         `,
         tags: [id]
     };
-    await updateClientEmailStatus(sell?.email ? sell.email : pay?.email, {
-        id: id,
-        subject: `¡Hola ${sell?.firstName ? sell.firstName : pay?.firstName}! Tu compra ha sido realizada con exito`,
-        opened: false,
-        clicked: false
-    });
     const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
     if (shopLogin?.emails > 0) {
+        await updateClientEmailStatus(sell?.email ? sell.email : pay?.email, {
+            id: id,
+            subject: `¡Hola ${sell?.firstName ? sell.firstName : pay?.firstName}! Tu compra ha sido realizada con exito`,
+            opened: false,
+            clicked: false
+        });
         const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
         console.log('API called successfully. Returned data: ' + JSON.stringify(data));
         await ShopLogin.findByIdAndUpdate(shopLogin._id, { emails: shopLogin.emails - 1 })
