@@ -131,9 +131,9 @@ export const createDefaultPages = async (req, res) => {
             },
             {
               page: 'Tienda',
-              slug: '',
+              slug: 'tienda',
               header: false,
-              metaTitle: 'tienda',
+              metaTitle: '',
               design: [
                 { content: 'Bloque 3', info: { title: 'Tienda' } },
                 { content: 'Categorias 2', info: { products: '' } },
@@ -154,8 +154,8 @@ export const createDefaultPages = async (req, res) => {
           footer: { bgColor: '#111111', textColor: '#ffffff' },
           cartPage: { bgColor: '#ffffff', textColor: '#111111', detailsColor: '#ffffff' },
           checkoutPage: { bgColor: '#ffffff', textColor: '#111111', detailsColor: '#ffffff' },
-          pageProduct: [{ reviews: true, design: [{ content: 'Carrusel productos' }, { content: 'Suscripción' }] }],
-          pageCategory: [{ design: [{ content: 'Bloque 6' }, { content: 'Categorias 2' }, { content: 'Productos' }, { content: 'Suscripción' }] }]
+          productPage: [{ reviews: true, design: [{ content: 'Carrusel productos' }, { content: 'Suscripción' }] }],
+          categoryPage: [{ design: [{ content: 'Bloque 6' }, { content: 'Categorias 2' }, { content: 'Productos' }, { content: 'Suscripción' }] }]
         })
         const newDesignSave = await newDesign.save()
         const newTag = new ClientTag({ tag: 'suscriptores' })
