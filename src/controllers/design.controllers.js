@@ -132,7 +132,7 @@ export const createDefaultPages = async (req, res) => {
             {
               page: 'Tienda',
               slug: 'tienda',
-              header: false,
+              header: true,
               metaTitle: '',
               design: [
                 { content: 'Bloque 3', info: { title: 'Tienda' } },
