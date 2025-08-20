@@ -53,6 +53,7 @@ const ClientSchema = new mongoose.Schema({
   emails: [emailSchema],
   data: [{ name: { type: String }, value: { type: String } }],
   address: { type: String },
+  number: { type: Number },
   details: { type: String },
   city: { type: String },
   region: { type: String },
