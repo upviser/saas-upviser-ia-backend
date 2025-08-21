@@ -33,6 +33,7 @@ export const getMessage = async (req, res) => {
         if (req.body?.entry && req.body.entry[0]?.changes && req.body.entry[0].changes[0]?.value?.messages && 
             req.body.entry[0].changes[0].value.messages[0]?.text && req.body.entry[0].changes[0].value.messages[0].text.body) {  
             const message = req.body.entry[0].changes[0].value.messages[0].text.body
+            console.log(message)
             const number = req.body.entry[0].changes[0].value.messages[0].from
             if (integration.whatsappToken && integration.whatsappToken !== '') {
                 const messages = await WhatsappMessage.find({phone: number}).select('-phone -_id').sort({ createdAt: -1 }).limit(2).lean()
@@ -320,6 +321,7 @@ export const getMessage = async (req, res) => {
             }
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text && req.body.entry[0].id === integration.idPage) {
             const message = req.body.entry[0].messaging[0].message.text
+            console.log(message)
             const sender = req.body.entry[0].messaging[0].sender.id
             if (integration.messengerToken) {
                 const messages = await MessengerMessage.find({messengerId: sender}).select('-messengerId -_id').sort({ createdAt: -1 }).limit(2).lean()
@@ -454,7 +456,7 @@ export const getMessage = async (req, res) => {
                         information = `${information}. ${JSON.stringify(calls)}. Si el usuario quiere agendar una llamada identifica la llamada más adecuada y pon su link de esta forma: ${process.env.WEB_URL}/llamadas/Nombre%20de%20la%20llamada utilizando el call.nameMeeting`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('intención de compra de productos')) {
-                        const cart = await Cart.findOne({ phone: number }).lean()
+                        const cart = await Cart.findOne({ messengerId: sender }).lean()
                         const CartSchema = z.object({
                             cart: z.array(z.object({
                                 name: z.string(),
@@ -470,7 +472,7 @@ export const getMessage = async (req, res) => {
                         const act = await openai.responses.parse({
                             model: "gpt-4o-mini",
                             input: [
-                                {"role": "system", "content": `Evalúa si el usuario ya agrego todos los productos que necesita en base a el modelo de carrito ${JSON.stringify(cart.cart)}, al historial de conversación y el último mensaje del usuario, si es asi establece 'ready' en true; de lo contrario, en false. Actualiza el modelo si el usuario agrego algun producto, quito alguno o modifico alguno, utilizando la información adicional disponible ${information}. Observaciones: *Si aun el usuario no especifica que no busca mas productos que ready quede en false.`},
+                                {"role": "system", "content": `Evalúa si el usuario ya agrego todos los productos que necesita en base a el modelo de carrito ${JSON.stringify(cart?.cart)}, al historial de conversación y el último mensaje del usuario, si es asi establece 'ready' en true; de lo contrario, en false. Actualiza el modelo si el usuario agrego algun producto, quito alguno o modifico alguno, utilizando la información adicional disponible ${information}. Observaciones: *Si aun el usuario no especifica que no busca mas productos que ready quede en false.`},
                                 ...conversation,
                                 {"role": "user", "content": message}
                             ],
@@ -509,7 +511,7 @@ export const getMessage = async (req, res) => {
                                 sku: matchedVariation?.sku || ''
                             };
                         }).filter(Boolean);
-                        await Cart.findOneAndUpdate({ phone: number }, { cart: enrichedCart })
+                        await Cart.findOneAndUpdate({ messengerId: sender }, { cart: enrichedCart })
                         if (act.output_parsed.ready) {
                             await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
                                 "recipient": {
@@ -617,6 +619,7 @@ export const getMessage = async (req, res) => {
             }
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text) {
             const message = req.body.entry[0].messaging[0].message.text
+            console.log(message)
             const sender = req.body.entry[0].messaging[0].sender.id
             if (integration.instagramToken) {
                 const messages = await InstagramMessage.find({instagramId: sender}).select('-instagramId -_id').sort({ createdAt: -1 }).limit(2).lean()
@@ -753,7 +756,7 @@ export const getMessage = async (req, res) => {
                         information = `${information}. ${JSON.stringify(calls)}. Si el usuario quiere agendar una llamada identifica la llamada más adecuada y pon su link de esta forma: ${process.env.WEB_URL}/llamadas/Nombre%20de%20la%20llamada utilizando el call.nameMeeting`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('intención de compra de productos')) {
-                        const cart = await Cart.findOne({ phone: number }).lean()
+                        const cart = await Cart.findOne({ instagramId: sender }).lean()
                         const CartSchema = z.object({
                             cart: z.array(z.object({
                                 name: z.string(),
@@ -810,7 +813,7 @@ export const getMessage = async (req, res) => {
                             };
                         }).filter(Boolean);
                         console.log(enrichedCart)
-                        await Cart.findOneAndUpdate({ phone: number }, { cart: enrichedCart })
+                        await Cart.findOneAndUpdate({ instagramId: sender }, { cart: enrichedCart })
                         if (act.output_parsed.ready) {
                             await axios.post(`https://graph.instagram.com/v23.0/${integration.inInstagram}/messages`, {
                                 "recipient": {
