@@ -33,7 +33,6 @@ export const getMessage = async (req, res) => {
         if (req.body?.entry && req.body.entry[0]?.changes && req.body.entry[0].changes[0]?.value?.messages && 
             req.body.entry[0].changes[0].value.messages[0]?.text && req.body.entry[0].changes[0].value.messages[0].text.body) {  
             const message = req.body.entry[0].changes[0].value.messages[0].text.body
-            console.log(message)
             const number = req.body.entry[0].changes[0].value.messages[0].from
             if (integration.whatsappToken && integration.whatsappToken !== '') {
                 const messages = await WhatsappMessage.find({phone: number}).select('-phone -_id').sort({ createdAt: -1 }).limit(2).lean()
@@ -321,7 +320,6 @@ export const getMessage = async (req, res) => {
             }
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text && req.body.entry[0].id === integration.idPage) {
             const message = req.body.entry[0].messaging[0].message.text
-            console.log(message)
             const sender = req.body.entry[0].messaging[0].sender.id
             if (integration.messengerToken) {
                 const messages = await MessengerMessage.find({messengerId: sender}).select('-messengerId -_id').sort({ createdAt: -1 }).limit(2).lean()
@@ -619,7 +617,6 @@ export const getMessage = async (req, res) => {
             }
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text) {
             const message = req.body.entry[0].messaging[0].message.text
-            console.log(message)
             const sender = req.body.entry[0].messaging[0].sender.id
             if (integration.instagramToken) {
                 const messages = await InstagramMessage.find({instagramId: sender}).select('-instagramId -_id').sort({ createdAt: -1 }).limit(2).lean()
@@ -658,7 +655,6 @@ export const getMessage = async (req, res) => {
                             format: zodTextFormat(TypeSchema, "type"),
                         },
                     });
-                    console.log(type.output_parsed)
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
@@ -703,7 +699,6 @@ export const getMessage = async (req, res) => {
                                 category: product.category
                             }
                         })
-                        console.log(simplifiedProducts)
                         information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario quiere comprar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto)`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
@@ -780,7 +775,6 @@ export const getMessage = async (req, res) => {
                                 format: zodTextFormat(CartSchema, "cart"),
                             },
                         });
-                        console.log(act.output_parsed)
                         const enrichedCart = act.output_parsed.cart.map(item => {
                             const product = products.find(p => p.name === item.name);
                             if (!product) return null
@@ -812,7 +806,6 @@ export const getMessage = async (req, res) => {
                                 sku: matchedVariation?.sku || ''
                             };
                         }).filter(Boolean);
-                        console.log(enrichedCart)
                         await Cart.findOneAndUpdate({ instagramId: sender }, { cart: enrichedCart })
                         if (act.output_parsed.ready) {
                             await axios.post(`https://graph.instagram.com/v23.0/${integration.inInstagram}/messages`, {
@@ -847,7 +840,6 @@ export const getMessage = async (req, res) => {
                                 presence_penalty: 0,
                                 store: false
                             });
-                            console.log(get.choices[0].message.content)
                             await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                                 "recipient": {
                                     "id": sender
