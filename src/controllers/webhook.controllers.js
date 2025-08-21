@@ -655,6 +655,7 @@ export const getMessage = async (req, res) => {
                             format: zodTextFormat(TypeSchema, "type"),
                         },
                     });
+                    console.log(type.output_parsed)
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
@@ -699,6 +700,7 @@ export const getMessage = async (req, res) => {
                                 category: product.category
                             }
                         })
+                        console.log(simplifiedProducts)
                         information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario quiere comprar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto)`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
@@ -767,7 +769,7 @@ export const getMessage = async (req, res) => {
                         const act = await openai.responses.parse({
                             model: "gpt-4o-mini",
                             input: [
-                                {"role": "system", "content": `Evalúa si el usuario ya agrego todos los productos que necesita en base a el modelo de carrito ${JSON.stringify(cart.cart)}, al historial de conversación y el último mensaje del usuario, si es asi establece 'ready' en true; de lo contrario, en false. Actualiza el modelo si el usuario agrego algun producto, quito alguno o modifico alguno, utilizando la información adicional disponible ${information}. Observaciones: *Si aun el usuario no especifica que no busca mas productos que ready quede en false.`},
+                                {"role": "system", "content": `Evalúa si el usuario ya agrego todos los productos que necesita en base a el modelo de carrito ${JSON.stringify(cart?.cart)}, al historial de conversación y el último mensaje del usuario, si es asi establece 'ready' en true; de lo contrario, en false. Actualiza el modelo si el usuario agrego algun producto, quito alguno o modifico alguno, utilizando la información adicional disponible ${information}. Observaciones: *Si aun el usuario no especifica que no busca mas productos que ready quede en false.`},
                                 ...conversation,
                                 {"role": "user", "content": message}
                             ],
@@ -775,6 +777,7 @@ export const getMessage = async (req, res) => {
                                 format: zodTextFormat(CartSchema, "cart"),
                             },
                         });
+                        console.log(act.output_parsed)
                         const enrichedCart = act.output_parsed.cart.map(item => {
                             const product = products.find(p => p.name === item.name);
                             if (!product) return null
@@ -806,6 +809,7 @@ export const getMessage = async (req, res) => {
                                 sku: matchedVariation?.sku || ''
                             };
                         }).filter(Boolean);
+                        console.log(enrichedCart)
                         await Cart.findOneAndUpdate({ phone: number }, { cart: enrichedCart })
                         if (act.output_parsed.ready) {
                             await axios.post(`https://graph.instagram.com/v23.0/${integration.inInstagram}/messages`, {
@@ -840,6 +844,7 @@ export const getMessage = async (req, res) => {
                                 presence_penalty: 0,
                                 store: false
                             });
+                            console.log(get.choices[0].message.content)
                             await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                                 "recipient": {
                                     "id": sender
