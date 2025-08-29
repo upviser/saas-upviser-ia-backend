@@ -633,7 +633,7 @@ export const getMessage = async (req, res) => {
             } else {
                 return res.json({ message: 'Error: No existe el token de la app para Messenger' })
             }
-        } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text) {
+        } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text && req.body.entry[0].id === integration.idInstagram) {
             const message = req.body.entry[0].messaging[0].message.text
             const sender = req.body.entry[0].messaging[0].sender.id
             if (integration.instagramToken) {
@@ -774,7 +774,8 @@ export const getMessage = async (req, res) => {
                         let cart
                         cart = await Cart.findOne({ instagramId: sender }).lean()
                         if (!cart) {
-                            cart = { cart: [] }
+                            const newCart = new Cart({ cart: [], instagramId: sender })
+                            cart = await newCart.save()
                         }
                         console.log(cart)
                         const CartSchema = z.object({
@@ -800,6 +801,7 @@ export const getMessage = async (req, res) => {
                                 format: zodTextFormat(CartSchema, "cart"),
                             },
                         });
+                        console.log(act.output_parsed.cart)
                         const enrichedCart = act.output_parsed.cart.map(item => {
                             const product = products.find(p => p.name === item.name);
                             if (!product) return null
@@ -831,13 +833,8 @@ export const getMessage = async (req, res) => {
                                 sku: matchedVariation?.sku || ''
                             };
                         }).filter(Boolean);
-                        if (cart?.cart?.length) {
-                            await Cart.findOneAndUpdate({ instagramId: sender }, { cart: enrichedCart })
-                        } else {
-                            const newCart = new Cart({ instagramId: sender }, { cart: enrichedCart })
-                            await newCart.save()
-                            console.log(newCart)
-                        }
+                        const updateCart = await Cart.findOneAndUpdate({ instagramId: sender }, { cart: enrichedCart })
+                        console.log(updateCart)
                         if (act.output_parsed.ready) {
                             await axios.post(`https://graph.instagram.com/v23.0/${integration.inInstagram}/messages`, {
                                 "recipient": {
