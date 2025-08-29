@@ -634,6 +634,8 @@ export const getMessage = async (req, res) => {
                 return res.json({ message: 'Error: No existe el token de la app para Messenger' })
             }
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text && req.body.entry[0].id === integration.idInstagram) {
+            console.log(req.body.entry[0])
+            console.log(req.body.entry[0].messaging[0])
             const message = req.body.entry[0].messaging[0].message.text
             const sender = req.body.entry[0].messaging[0].sender.id
             if (integration.instagramToken) {
@@ -836,7 +838,8 @@ export const getMessage = async (req, res) => {
                         const updateCart = await Cart.findOneAndUpdate({ instagramId: sender }, { cart: enrichedCart })
                         console.log(updateCart)
                         if (act.output_parsed.ready) {
-                            await axios.post(`https://graph.instagram.com/v23.0/${integration.inInstagram}/messages`, {
+                            console.log('listo')
+                            await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                                 "recipient": {
                                     "id": sender
                                 },
