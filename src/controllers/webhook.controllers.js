@@ -665,7 +665,6 @@ export const getMessage = async (req, res) => {
                             format: zodTextFormat(TypeSchema, "type"),
                         },
                     });
-                    console.log(type.output_parsed)
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
@@ -769,7 +768,6 @@ export const getMessage = async (req, res) => {
                             const newCart = new Cart({ cart: [], instagramId: sender })
                             cart = await newCart.save()
                         }
-                        console.log(cart)
                         const CartSchema = z.object({
                             cart: z.array(z.object({
                                 name: z.string(),
@@ -793,7 +791,6 @@ export const getMessage = async (req, res) => {
                                 format: zodTextFormat(CartSchema, "cart"),
                             },
                         });
-                        console.log(act.output_parsed.cart)
                         const enrichedCart = act.output_parsed.cart.map(item => {
                             const product = products.find(p => p.name === item.name);
                             if (!product) return null
@@ -826,9 +823,7 @@ export const getMessage = async (req, res) => {
                             };
                         }).filter(Boolean);
                         const updateCart = await Cart.findOneAndUpdate({ instagramId: sender }, { cart: enrichedCart })
-                        console.log(updateCart)
                         if (act.output_parsed.ready) {
-                            console.log('listo')
                             await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                                 "recipient": {
                                     "id": sender
@@ -846,7 +841,6 @@ export const getMessage = async (req, res) => {
                             const newMessageSave = await newMessage.save()
                             return res.send({ ...newMessageSave.toObject(), cart: enrichedCart, ready: true })
                         } else {
-                            console.log('no listo')
                             const get = await openai.chat.completions.create({
                                 model: "gpt-4o-mini",
                                 messages: [
