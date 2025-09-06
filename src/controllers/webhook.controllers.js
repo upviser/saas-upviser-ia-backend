@@ -32,7 +32,6 @@ export const getMessage = async (req, res) => {
         const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
         if (req.body?.entry && req.body.entry[0]?.changes && req.body.entry[0].changes[0]?.value?.messages && 
             req.body.entry[0].changes[0].value.messages[0]?.text && req.body.entry[0].changes[0].value.messages[0].text.body) {  
-            console.log(req.body.entry[0].changes[0].value.metadata.phone_number_id)
             const message = req.body.entry[0].changes[0].value.messages[0].text.body
             const number = req.body.entry[0].changes[0].value.messages[0].from
             if (integration.whatsappToken && integration.whatsappToken !== '') {
@@ -75,7 +74,6 @@ export const getMessage = async (req, res) => {
                             format: zodTextFormat(TypeSchema, "type"),
                         },
                     });
-                    console.log(type.output_parsed)
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         await axios.post(`https://graph.facebook.com/v22.0/${integration.idPhone}/messages`, {
@@ -268,7 +266,6 @@ export const getMessage = async (req, res) => {
                         }
                     }
                     if (information !== '') {
-                        console.log('informacion')
                         const response = await openai.chat.completions.create({
                             model: "gpt-4o-mini",
                             messages: [
@@ -284,7 +281,6 @@ export const getMessage = async (req, res) => {
                             presence_penalty: 0,
                             store: false
                         });
-                        console.log(response.choices[0].message.content)
                         await axios.post(`https://graph.facebook.com/v22.0/${integration.idPhone}/messages`, {
                             "messaging_product": "whatsapp",
                             "to": number,
@@ -700,7 +696,6 @@ export const getMessage = async (req, res) => {
                                 category: product.category
                             }
                         })
-                        console.log(simplifiedProducts)
                         information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario quiere comprar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto)`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
