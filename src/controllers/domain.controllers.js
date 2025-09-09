@@ -51,3 +51,11 @@ export const editDomain = async (req, res) => {
         return res.status(500).json({ message: error.message })
     }
 }
+export const getDomain = async (req, res) => {
+    try {
+        const domain = await Domain.findOne().lean()
+        return res.json(domain)
+    } catch (error) {
+        return res.status(500).json({ message: error.message })
+    }
+}
