@@ -33,7 +33,7 @@ export const editDomain = async (req, res) => {
 
         const details = getResp.data;
 
-        res.json({
+        return res.json({
             ok: true,
             domain: domainInfo.name,
             verified: domainInfo.verified,
@@ -46,7 +46,6 @@ export const editDomain = async (req, res) => {
                     ? `Añade un registro A apuntando a ${details.verification[0].value}`
                     : 'Sigue el desafío de verificación.'),
         });
-        return res.json(domainEdit)
     } catch {
         return res.status(500).json({ message: error.message })
     }
