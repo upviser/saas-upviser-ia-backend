@@ -11,7 +11,7 @@ export const editDomain = async (req, res) => {
 
     if (!domainUpdate) {
         const newDomain = new Domain({ domain: req.body.domain })
-        await newDomain.dave()
+        await newDomain.save()
     }
 
     const mainDomainResponse = await vercel.projects.addProjectDomain({
