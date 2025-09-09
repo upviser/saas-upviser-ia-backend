@@ -7,19 +7,21 @@ export const editDomain = async (req, res) => {
     });
 
   try {
-    const domainUpdate = await Domain.findOneAndUpdate({}, { domain: req.body.domain }, { new: true })
-
-    if (!domainUpdate) {
-        const newDomain = new Domain({ domain: req.body.domain })
-        await newDomain.save()
-    }
-
     const mainDomainResponse = await vercel.projects.addProjectDomain({
       idOrName: process.env.VERCEL_PROJECT_ID,
       requestBody: {
         name: req.body.domain,
       },
     })
+
+    if (mainDomainResponse.verified) {
+      const domainUpdate = await Domain.findOneAndUpdate({}, { domain: req.body.domain }, { new: true })
+
+      if (!domainUpdate) {
+          const newDomain = new Domain({ domain: req.body.domain })
+          await newDomain.save()
+      }
+    }
 
     return res.json(mainDomainResponse)
   } catch (error) {
