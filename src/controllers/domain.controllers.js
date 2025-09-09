@@ -15,7 +15,6 @@ export const editDomain = async (req, res) => {
         if (!domainEdit) {
             const newDomain = new Domain({ domain: req.body.domain })
             await newDomain.save()
-            return res.status(201).json(newDomain)
         }
         const addResp = await axios.post(
             `${VERCEL_API}/v10/projects/${PROJECT}/domains`,
