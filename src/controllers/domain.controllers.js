@@ -7,8 +7,6 @@ export const editDomain = async (req, res) => {
     });
 
   try {
-    const domain = req.body.domain
-
     const domainUpdate = await Domain.findOneAndUpdate({}, { domain: req.body.domain }, { new: true })
 
     if (!domainUpdate) {
@@ -23,16 +21,7 @@ export const editDomain = async (req, res) => {
       },
     })
 
-    const config = await vercel.domains.getDomainConfig({ domain })
-
-    return res.json({
-        ok: true,
-        domain,
-        verified: mainDomainResponse.verified,
-        misconfigured: config.misconfigured,
-        recommendedIPv4: config.recommendedIPv4,
-        recommendedCNAME: config.recommendedCNAME,
-    })
+    return res.json(mainDomainResponse)
   } catch (error) {
     console.error(
       error instanceof Error ? `Error: ${error.message}` : String(error),
