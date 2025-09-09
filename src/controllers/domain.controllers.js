@@ -16,11 +16,11 @@ export const editDomain = async (req, res) => {
 
     console.log(`Main domain added: ${mainDomainResponse.name}`);
 
-    const checkConfiguration = await vercel.domains.getDomainConfig({
-      domain: req.body.domain,
-    });
+    //const checkConfiguration = await vercel.domains.getDomainConfig({
+    //  domain: req.body.domain,
+    //});
 
-    return res.json(checkConfiguration)
+    return res.json(mainDomainResponse)
   } catch (error) {
     console.error(
       error instanceof Error ? `Error: ${error.message}` : String(error),
