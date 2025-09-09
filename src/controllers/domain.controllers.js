@@ -1,4 +1,5 @@
 import { Vercel } from '@vercel/sdk';
+import Domain from '../models/Domain.js'
 
 export const editDomain = async (req, res) => {
     const vercel = new Vercel({
@@ -6,7 +7,15 @@ export const editDomain = async (req, res) => {
     });
 
   try {
-    // Add main domain
+    const domain = req.body.domain
+
+    const domainUpdate = await Domain.findOneAndUpdate({}, { domain: req.body.domain }, { new: true })
+
+    if (!domainUpdate) {
+        const newDomain = new Domain({ domain: req.body.domain })
+        await newDomain.dave()
+    }
+
     const mainDomainResponse = await vercel.projects.addProjectDomain({
       idOrName: process.env.VERCEL_PROJECT_ID,
       requestBody: {
@@ -14,7 +23,16 @@ export const editDomain = async (req, res) => {
       },
     })
 
-    return res.json(mainDomainResponse)
+    const config = await vercel.domains.getDomainConfig({ domain })
+
+    return res.json({
+        ok: true,
+        domain,
+        verified: mainDomainResponse.verified,
+        misconfigured: config.misconfigured,
+        recommendedIPv4: config.recommendedIPv4,
+        recommendedCNAME: config.recommendedCNAME,
+    })
   } catch (error) {
     console.error(
       error instanceof Error ? `Error: ${error.message}` : String(error),
