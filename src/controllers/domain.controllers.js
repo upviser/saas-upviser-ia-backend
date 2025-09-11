@@ -17,7 +17,7 @@ export const editDomain = async (req, res) => {
 
     const brevoDomain = await axios.post(
       "https://api.brevo.com/v3/senders/domains",
-      { domain: req.body.domain },
+      { name: req.body.domain },
       { headers: { "api-key": process.env.BREVO_API } }
     );
 
