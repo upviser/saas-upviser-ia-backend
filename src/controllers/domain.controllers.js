@@ -44,6 +44,7 @@ export const editDomain = async (req, res) => {
     console.error(
       error instanceof Error ? `Error: ${error.message}` : String(error),
     );
+    return res.status(500).json({ message: error.message })
   }
 }
 
