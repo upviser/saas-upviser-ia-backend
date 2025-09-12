@@ -4,6 +4,7 @@ import ClientTag from '../models/ClientTag.js'
 import ClientData from '../models/ClientData.js'
 import Service from '../models/Service.js'
 import Style from '../models/Style.js'
+import Domain from '../models/Domain.js'
 
 export const createDesign = async (req, res) => {
     try {
@@ -176,6 +177,8 @@ export const createDefaultPages = async (req, res) => {
         await newDataPhone.save()
         const newStyle = new Style({ design: 'Ninguno', form: 'Cuadradas', primary: '#2167e5', button: '#ffffff' })
         await newStyle.save()
+        const newDomain = new Domain({ domain: 'upviser.cl', name: process.env.NAME_STORE, email: `${process.env.NAME_STORE.toLowerCase()}@upviser.cl` })
+        await newDomain.save()
         return res.json(newDesignSave)
     } catch (error) {
         return res.status(500).json({message: error.message})
