@@ -1,6 +1,7 @@
 import brevo from '@getbrevo/brevo'
 import { updateClientEmailStatus } from '../utils/updateEmail.js'
 import ShopLogin from '../models/ShopLogin.js'
+import Domain from '../models/Domain.js'
 
 export const sendEmailBrevo = async ({ subscribers, emailData, clientData, storeData, automatizationId, style }) => {
 
@@ -28,11 +29,13 @@ export const sendEmailBrevo = async ({ subscribers, emailData, clientData, store
         }, text)
     };
 
+    const domain = await Domain.findOne().lean()
+
     subscribers.map(async (subscriber) => {
         const dataMap = createDataMap(subscriber._doc || subscriber, clientData)
         let sendSmtpEmail = new brevo.SendSmtpEmail()
         sendSmtpEmail = {
-            sender: { email: process.env.BREVO_EMAIL, name: process.env.BREVO_NAME },
+            sender: { email: domain.email, name: domain.name },
             subject: replacePlaceholders(emailData.affair, dataMap),
             to: [{
                 email: subscriber.email,

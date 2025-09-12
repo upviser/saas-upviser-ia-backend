@@ -2,6 +2,7 @@ import brevo from '@getbrevo/brevo'
 import { updateClientEmailStatus } from '../utils/updateEmail.js'
 import { NumberFormat } from '../utils/NumberFormat.js'
 import ShopLogin from '../models/ShopLogin.js'
+import Domain from '../models/Domain.js'
 
 export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services }) => {
 
@@ -18,9 +19,11 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services 
         service = services.find(service => service._id.toString() === pay.service)
     }
 
+    const domain = await Domain.findOne().lean()
+
     let sendSmtpEmail = new brevo.SendSmtpEmail()
     sendSmtpEmail = {
-        sender: { email: process.env.BREVO_EMAIL, name: process.env.BREVO_NAME },
+        sender: { email: domain.email, name: domain.name },
         subject: `¡Hola ${sell?.firstName ? sell.firstName : pay.firstName}! Tu compra ha sido realizada con exito`,
         to: [{
             email: sell?.email ? sell.email : pay.email,
