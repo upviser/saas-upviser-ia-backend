@@ -6,10 +6,12 @@ import { sendEmailBuyBrevo } from '../utils/sendEmailBuyBrevo.js'
 import StoreData from '../models/StoreData.js'
 import Style from '../models/Style.js'
 import Service from '../models/Service.js'
+import Domain from '../models/Domain.js'
 
 export const createPay = async (req, res) => {
     try {
         const integrations = await Integrations.findOne().lean()
+        const domain = await Domain.findOne().lean()
         if (req.body.state === 'Pago iniciado' || req.body.state === 'Segundo pago iniciado') {
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
@@ -45,7 +47,7 @@ export const createPay = async (req, res) => {
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(`${process.env.WEB_URL}${req.body.page}`)
+                    .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}${req.body.page}`)
                     .setActionSource('website')
                 const eventsData = [serverEvent];
                 const eventRequest = (new EventRequest(access_token, pixel_id))
@@ -94,7 +96,7 @@ export const createPay = async (req, res) => {
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(`${process.env.WEB_URL}${req.body.page}`)
+                    .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}${req.body.page}`)
                     .setActionSource('website')
                 const eventsData = [serverEvent];
                 const eventRequest = (new EventRequest(access_token, pixel_id))
@@ -159,6 +161,7 @@ export const updatePay = async (req, res) => {
         const payUpdate = await Pay.findByIdAndUpdate(req.params.id, req.body, { new: true })
         if (req.body.state === 'Pago realizado') {
             const integrations = await Integrations.findOne().lean()
+            const domain = await Domain.findOne().lean()
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
@@ -193,7 +196,7 @@ export const updatePay = async (req, res) => {
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(`${process.env.WEB_URL}${req.body.page}`)
+                    .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}${req.body.page}`)
                     .setActionSource('website')
                 const eventsData = [serverEvent];
                 const eventRequest = (new EventRequest(access_token, pixel_id))

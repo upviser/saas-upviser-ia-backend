@@ -6,11 +6,13 @@ import { sendEmailBuyBrevo } from '../utils/sendEmailBuyBrevo.js'
 import { sendEmailBrevo } from '../utils/sendEmailBrevo.js'
 import StoreData from '../models/StoreData.js'
 import Style from '../models/Style.js'
+import Domain from '../models/Domain.js'
 
 export const createSell = async (req, res) => {
     try {
         const {email, region, city, firstName, lastName, address, details, phone, coupon, cart, shipping, state, pay, total, fbp, fbc, shippingMethod, shippingState, subscription} = req.body
         const integrations = await Integrations.findOne().lean()
+        const domain = await Domain.findOne().lean()
         const cuponUpper = coupon?.toUpperCase()
         const sells = await Sell.countDocuments()
         const storeData = await StoreData.findOne().lean()
@@ -28,7 +30,7 @@ export const createSell = async (req, res) => {
                 const pixel_id = integrations.apiPixelId
                 const api = bizSdk.FacebookAdsApi.init(access_token)
                 let current_timestamp = new Date()
-                const url = `${process.env.WEB_URL}/finalizar-compra/`
+                const url = `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra/`
                 const userData = (new UserData())
                     .setFirstName(firstName.toLowerCase())
                     .setLastName(lastName.toLowerCase())
@@ -69,7 +71,7 @@ export const createSell = async (req, res) => {
             date.setDate(date.getDate() + 10)
             const cronExpression = formatDateToCron(date)
             cron.schedule(cronExpression, () => {
-                sendEmailBrevo({ subscripbers: [{ firstName: firstName, email: email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${process.env.WEB_URL}/evaluar-productos?sell=${sellSave._id}` }, storeData: storeData, style: style });
+                sendEmailBrevo({ subscripbers: [{ firstName: firstName, email: email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${sellSave._id}` }, storeData: storeData, style: style });
             });
         } else if (state === 'Pedido realizado') {
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
@@ -82,7 +84,7 @@ export const createSell = async (req, res) => {
                 const pixel_id = integrations.apiPixelId
                 const api = bizSdk.FacebookAdsApi.init(access_token)
                 let current_timestamp = new Date()
-                const url = `${process.env.WEB_URL}/finalizar-compra/`
+                const url = `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra/`
                 const userData = (new UserData())
                     .setFirstName(firstName.toLowerCase())
                     .setLastName(lastName.toLowerCase())
@@ -193,6 +195,7 @@ export const updateSell = async (req, res) => {
         }
         if (sell.state === 'Pago realizado') {
             const integrations = await Integrations.findOne().lean()
+            const domain = await Domain.findOne().lean()
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const CustomData = bizSdk.CustomData
                 const EventRequest = bizSdk.EventRequest
@@ -202,7 +205,7 @@ export const updateSell = async (req, res) => {
                 const pixel_id = integrations.apiPixelId
                 const api = bizSdk.FacebookAdsApi.init(access_token)
                 let current_timestamp = new Date()
-                const url = `${process.env.WEB_URL}/gracias-por-comprar/`
+                const url = `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/gracias-por-comprar/`
                 const userData = (new UserData())
                     .setFirstName(sell.firstName.toLowerCase())
                     .setLastName(sell.lastName.toLowerCase())
@@ -242,7 +245,7 @@ export const updateSell = async (req, res) => {
             date.setDate(date.getDate() + 10)
             const cronExpression = formatDateToCron(date)
             cron.schedule(cronExpression, () => {
-                sendEmailBrevo({ subscripbers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${process.env.WEB_URL}/evaluar-productos?sell=${sell._id}` }, storeData: storeData, style: style });
+                sendEmailBrevo({ subscripbers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${sell._id}` }, storeData: storeData, style: style });
             });
         }
         return res.send(updateSell)
@@ -279,6 +282,7 @@ export const updatedSell = async (req, res) => {
             })
         } else if (req.body.state === 'Pago realizado') {
             const integrations = await Integrations.findOne().lean()
+            const domain = await Domain.findOne().lean()
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const CustomData = bizSdk.CustomData
                 const EventRequest = bizSdk.EventRequest
@@ -288,7 +292,7 @@ export const updatedSell = async (req, res) => {
                 const pixel_id = integrations.apiPixelId
                 const api = bizSdk.FacebookAdsApi.init(access_token)
                 let current_timestamp = new Date()
-                const url = `${process.env.WEB_URL}/gracias-por-comprar/`
+                const url = `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/gracias-por-comprar/`
                 const userData = (new UserData())
                     .setFirstName(updatedSell.firstName.toLowerCase())
                     .setLastName(updatedSell.lastName.toLowerCase())
@@ -328,7 +332,7 @@ export const updatedSell = async (req, res) => {
             date.setDate(date.getDate() + 10)
             const cronExpression = formatDateToCron(date)
             cron.schedule(cronExpression, () => {
-                sendEmailBrevo({ subscripbers: [{ firstName: updatedSell.firstName, email: updatedSell.email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${process.env.WEB_URL}/evaluar-productos?sell=${updatedSell._id}` }, storeData: storeData, style: style });
+                sendEmailBrevo({ subscripbers: [{ firstName: updatedSell.firstName, email: updatedSell.email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${updatedSell._id}` }, storeData: storeData, style: style });
             });
         }
         return res.send(updatedSell)

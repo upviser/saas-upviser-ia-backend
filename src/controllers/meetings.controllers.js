@@ -11,6 +11,7 @@ import Zoom from '../models/Zoom.js'
 import { isTokenExpired } from '../utils/zoom.js'
 import Integrations from '../models/Integrations.js'
 import Style from '../models/Style.js'
+import Domain from '../models/Domain.js'
 
 export const editCalendar = async (req, res) => {
     try {
@@ -62,6 +63,7 @@ export const CreateMeeting = async (req, res) => {
     try {
         if (req.body.type === 'Llamada por Zoom') {
             const integrations = await Integrations.findOne().lean()
+            const domain = await Domain.findOne().lean()
             let token
             if (isTokenExpired(integrations.zoomCreateToken, integrations.zoomExpiresIn)) {
                 const response = await axios.post('https://zoom.us/oauth/token', null, {
@@ -124,7 +126,7 @@ export const CreateMeeting = async (req, res) => {
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(`${process.env.WEB_URL}${req.body.page}`)
+                    .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}${req.body.page}`)
                     .setActionSource('website')
                 const eventsData = [serverEvent];
                 const eventRequest = (new EventRequest(access_token, pixel_id))
@@ -154,6 +156,7 @@ export const CreateMeeting = async (req, res) => {
             await sendEmailBrevo({ subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu llamada ha sido agendada con exito`, title: 'Hemos agendado tu llamada exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu llamada con fecha ${new Date(req.body.date).getUTCDate()}/${new Date(req.body.date).getUTCMonth() + 1}/${new Date(req.body.date).getUTCFullYear()} a las ${new Date(req.body.date).getUTCHours()}:${new Date(req.body.date).getUTCMinutes() >= 9 ? new Date(req.body.date).getUTCMinutes() : `0${new Date(req.body.date).getUTCMinutes()}`} ha sido agendada con exito, aqui te dejamos el acceso a la llamada en el siguiente boton, para cualquier consulta comunicate con nostros a traves de nuestro Whatsapp +56${storeData[0].phone}.`, buttonText: 'Ingresar a la llamada', url: meetingResponse.data.start_url }, clientData: clientData, storeData: storeData[0], style: style[0] })
         } else {
             const integrations = await Integrations.findOne().lean()
+            const domain = await Domain.findOne().lean()
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
@@ -188,7 +191,7 @@ export const CreateMeeting = async (req, res) => {
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(`${process.env.WEB_URL}${req.body.page}`)
+                    .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}${req.body.page}`)
                     .setActionSource('website')
                 const eventsData = [serverEvent];
                 const eventRequest = (new EventRequest(access_token, pixel_id))

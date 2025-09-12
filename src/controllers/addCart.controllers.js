@@ -1,11 +1,13 @@
 import AddCart from '../models/AddCart.js'
 import bizSdk from 'facebook-nodejs-business-sdk'
 import Integrations from '../models/Integrations.js'
+import Domain from '../models/Domain.js'
 
 export const createAddCart = async (req, res) => {
     try {
         const {product, fbp, fbc} = req.body
         const integrations = await Integrations.findOne().lean()
+        const domain = await Domain.findOne().lean()
         const nuevoAñadir = new AddCart({quantity: product.quantity, name: product.name, price: product.price, category: product.category.category})
         const newAddToCart = await nuevoAñadir.save()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
@@ -42,7 +44,7 @@ export const createAddCart = async (req, res) => {
                 .setEventTime(current_timestamp)
                 .setUserData(userData)
                 .setCustomData(customData)
-                .setEventSourceUrl(`${process.env.WEB_URL}/tienda/${product.category.slug}/${product.slug}`)
+                .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/tienda/${product.category.slug}/${product.slug}`)
                 .setActionSource('website')
             const eventsData = [serverEvent]
             const eventRequest = (new EventRequest(access_token, pixel_id))

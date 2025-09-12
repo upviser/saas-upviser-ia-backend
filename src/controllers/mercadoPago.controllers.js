@@ -1,5 +1,6 @@
 import { MercadoPagoConfig, Payment, PreApproval } from 'mercadopago';
 import Paym from '../models/Payment.js'
+import Domain from '../models/Domain.js'
 
 export const createPay = async (req, res) => {
     try {
@@ -23,6 +24,7 @@ export const createPay = async (req, res) => {
 export const createSuscribe = async (req, res) => {
     try {
         const paymentData = await Paym.findOne()
+        const domain = await Domain.findOne().lean()
         const client = new MercadoPagoConfig({ accessToken: paymentData.mercadoPago.accessToken, options: { timeout: 5000 } });
         console.log(client)
         const preapproval = new PreApproval(client);
@@ -38,7 +40,7 @@ export const createSuscribe = async (req, res) => {
                 currency_id: 'CLP',
                 start_date: new Date().toISOString()
             },
-            back_url: `${process.env.WEB_URL}/gracias-por-comprar`,
+            back_url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/gracias-por-comprar`,
             status: 'authorized'
         };
         console.log(body)

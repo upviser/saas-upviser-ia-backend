@@ -1,9 +1,11 @@
 import bizSdk from 'facebook-nodejs-business-sdk'
 import Integrations from '../models/Integrations.js'
+import Domain from '../models/Domain.js'
 
 export const createSubscription = async (req, res) => {
     try {
         const integrations = await Integrations.findOne().lean()
+        const domain = await Domain.findOne().lean()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
             const EventRequest = bizSdk.EventRequest
             const UserData = bizSdk.UserData
@@ -23,7 +25,7 @@ export const createSubscription = async (req, res) => {
                 .setEventName('Lead')
                 .setEventTime(current_timestamp)
                 .setUserData(userData)
-                .setEventSourceUrl(`${process.env.WEB_URL}${req.body.page}`)
+                .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}${req.body.page}`)
                 .setActionSource('website')
             const eventsData = [serverEvent];
             const eventRequest = (new EventRequest(access_token, pixel_id))

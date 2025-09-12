@@ -16,6 +16,7 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import ShopLogin from '../models/ShopLogin.js'
 import Notification from "../models/Notification.js"
+import Domain from '../models/Domain.js'
 
 export const createWebhook = async (req, res) => {
     const storeData = await StoreData.findOne().lean()
@@ -29,6 +30,7 @@ export const createWebhook = async (req, res) => {
 export const getMessage = async (req, res) => {
     try {
         const integration = await Integration.findOne().lean()
+        const domain = await Domain.findOne().lean()
         const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
         if (req.body?.entry && req.body.entry[0]?.changes && req.body.entry[0].changes[0]?.value?.messages && 
             req.body.entry[0].changes[0].value.messages[0]?.text && req.body.entry[0].changes[0].value.messages[0].text.body) {  
@@ -116,7 +118,7 @@ export const getMessage = async (req, res) => {
                                 category: product.category
                             }
                         })
-                        information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario esta buscando un producto o le quieres recomendar un produucto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto.`
+                        information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario esta buscando un producto o le quieres recomendar un produucto pon ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto.`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
                         const politics = await Politics.find().lean()
@@ -154,7 +156,7 @@ export const getMessage = async (req, res) => {
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('agendamientos') || JSON.stringify(type.output_parsed).toLowerCase().includes('servicios')) {
                         const calls = await Call.find().select('-_id -labels -buttonText -tags -action -message').lean()
-                        information = `${information}. ${JSON.stringify(calls)}. Si el usuario quiere agendar una llamada identifica la llamada más adecuada y pon su link de esta forma: ${process.env.WEB_URL}/llamadas/Nombre%20de%20la%20llamada utilizando el call.nameMeeting`
+                        information = `${information}. ${JSON.stringify(calls)}. Si el usuario quiere agendar una llamada identifica la llamada más adecuada y pon su link de esta forma: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/llamadas/Nombre%20de%20la%20llamada utilizando el call.nameMeeting`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('intención de compra de productos')) {
                         let cart
@@ -230,14 +232,14 @@ export const getMessage = async (req, res) => {
                                 "messaging_product": "whatsapp",
                                 "to": number,
                                 "type": "text",
-                                "text": {"body": `Perfecto, para realizar tu compra toca en el siguiente enlace: ${process.env.WEB_URL}/finalizar-compra?phone=${number}`}
+                                "text": {"body": `Perfecto, para realizar tu compra toca en el siguiente enlace: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?phone=${number}`}
                             }, {
                                 headers: {
                                     'Content-Type': 'application/json',
                                     "Authorization": `Bearer ${integration.whatsappToken}`
                                 }
                             })
-                            const newMessage = new WhatsappMessage({phone: number, message: message, response: `Perfecto, para realizar tu compra toca en el siguiente enlace: https://${process.env.WEB_URL}/finalizar-compra?phone=${number}`, agent: false, view: false, ready: true})
+                            const newMessage = new WhatsappMessage({phone: number, message: message, response: `Perfecto, para realizar tu compra toca en el siguiente enlace: https://${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?phone=${number}`, agent: false, view: false, ready: true})
                             const newMessageSave = await newMessage.save()
                             return res.send({ ...newMessageSave.toObject(), cart: enrichedCart, ready: true })
                         } else {
@@ -409,7 +411,7 @@ export const getMessage = async (req, res) => {
                                 category: product.category
                             }
                         })
-                        information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario esta buscando un producto o le quieres recomendar un produucto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto.`
+                        information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario esta buscando un producto o le quieres recomendar un produucto pon ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto.`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
                         const politics = await Politics.find().lean()
@@ -447,7 +449,7 @@ export const getMessage = async (req, res) => {
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('agendamientos') || JSON.stringify(type.output_parsed).toLowerCase().includes('servicios')) {
                         const calls = await Call.find().select('-_id -labels -buttonText -tags -action -message').lean()
-                        information = `${information}. ${JSON.stringify(calls)}. Si el usuario quiere agendar una llamada identifica la llamada más adecuada y pon su link de esta forma: ${process.env.WEB_URL}/llamadas/Nombre%20de%20la%20llamada utilizando el call.nameMeeting`
+                        information = `${information}. ${JSON.stringify(calls)}. Si el usuario quiere agendar una llamada identifica la llamada más adecuada y pon su link de esta forma: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/llamadas/Nombre%20de%20la%20llamada utilizando el call.nameMeeting`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('intención de compra de productos')) {
                         let cart
@@ -525,14 +527,14 @@ export const getMessage = async (req, res) => {
                                 },
                                 "messaging_type": "RESPONSE",
                                 "message": {
-                                    "text": `Perfecto, para realizar tu compra toca en el siguiente enlace: ${process.env.WEB_URL}/finalizar-compra?messengerId=${sender}`
+                                    "text": `Perfecto, para realizar tu compra toca en el siguiente enlace: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?messengerId=${sender}`
                                 }
                             }, {
                                 headers: {
                                     'Content-Type': 'application/json'
                                 }
                             })
-                            const newMessage = new MessengerMessage({messengerId: sender, message: message, response: `Perfecto, para realizar tu compra toca en el siguiente enlace: ${process.env.WEB_URL}/finalizar-compra?messengerId=${sender}`, agent: false, view: false, ready: true})
+                            const newMessage = new MessengerMessage({messengerId: sender, message: message, response: `Perfecto, para realizar tu compra toca en el siguiente enlace: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?messengerId=${sender}`, agent: false, view: false, ready: true})
                             const newMessageSave = await newMessage.save()
                             return res.send({ ...newMessageSave.toObject(), cart: enrichedCart, ready: true })
                         } else {
@@ -710,7 +712,7 @@ export const getMessage = async (req, res) => {
                                 category: product.category
                             }
                         })
-                        information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario esta buscando un producto o le quieres recomendar un produucto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto.`
+                        information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario esta buscando un producto o le quieres recomendar un produucto pon ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto.`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
                         const politics = await Politics.find().lean()
@@ -748,7 +750,7 @@ export const getMessage = async (req, res) => {
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('agendamientos') || JSON.stringify(type.output_parsed).toLowerCase().includes('servicios')) {
                         const calls = await Call.find().select('-_id -labels -buttonText -tags -action -message').lean()
-                        information = `${information}. ${JSON.stringify(calls)}. Si el usuario quiere agendar una llamada identifica la llamada más adecuada y pon su link de esta forma: ${process.env.WEB_URL}/llamadas/Nombre%20de%20la%20llamada utilizando el call.nameMeeting`
+                        information = `${information}. ${JSON.stringify(calls)}. Si el usuario quiere agendar una llamada identifica la llamada más adecuada y pon su link de esta forma: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/llamadas/Nombre%20de%20la%20llamada utilizando el call.nameMeeting`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('intención de compra de productos')) {
                         let cart
@@ -825,7 +827,7 @@ export const getMessage = async (req, res) => {
                                     "id": sender
                                 },
                                 "message": {
-                                    "text": `Perfecto, para realizar tu compra toca en el siguiente enlace: ${process.env.WEB_URL}/finalizar-compra?instagramId=${sender}`
+                                    "text": `Perfecto, para realizar tu compra toca en el siguiente enlace: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?instagramId=${sender}`
                                 }
                             }, {
                                 headers: {
@@ -833,7 +835,7 @@ export const getMessage = async (req, res) => {
                                     'Content-Type': 'application/json'
                                 }
                             })
-                            const newMessage = new InstagramMessage({instagramId: sender, message: message, response: `Perfecto, para realizar tu compra toca en el siguiente enlace: ${process.env.WEB_URL}/finalizar-compra?instagramId=${sender}`, agent: false, view: false, ready: true})
+                            const newMessage = new InstagramMessage({instagramId: sender, message: message, response: `Perfecto, para realizar tu compra toca en el siguiente enlace: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?instagramId=${sender}`, agent: false, view: false, ready: true})
                             const newMessageSave = await newMessage.save()
                             return res.send({ ...newMessageSave.toObject(), cart: enrichedCart, ready: true })
                         } else {

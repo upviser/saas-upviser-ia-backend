@@ -1,10 +1,12 @@
 import Page from '../models/Page.js'
 import bizSdk from 'facebook-nodejs-business-sdk'
 import Integrations from '../models/Integrations.js'
+import Domain from '../models/Domain.js'
 
 export const pageView = async (req, res) => {
     try {
         const integrations = await Integrations.findOne().lean()
+        const domain = await Domain.findOne().lean()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
             const CustomData = bizSdk.CustomData
             const EventRequest = bizSdk.EventRequest
@@ -27,7 +29,7 @@ export const pageView = async (req, res) => {
                 .setEventTime(current_timestamp)
                 .setUserData(userData)
                 .setCustomData(customData)
-                .setEventSourceUrl(`${process.env.WEB_URL}${req.body.page}`)
+                .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}${req.body.page}`)
                 .setActionSource('website')
             const eventsData = [serverEvent];
             const eventRequest = (new EventRequest(access_token, pixel_id))

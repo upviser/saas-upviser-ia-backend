@@ -1,8 +1,10 @@
 import { MercadoPagoConfig, Preference } from "mercadopago"
 import Paym from '../models/Payment.js'
+import Domain from '../models/Domain.js'
 
 export const createOrder = async (req, res) => {
   const paymentData = await Paym.findOne()
+  const domain = await Domain.findOne().lean()
   const client = new MercadoPagoConfig({ accessToken: paymentData.mercadoPago.accessToken });
   const preference = new Preference(client);
 
@@ -11,9 +13,9 @@ export const createOrder = async (req, res) => {
       body: {
         items: req.body,
         back_urls: {
-          success: `${process.env.WEB_URL}/procesando-pago`,
-          pending: `${process.env.WEB_URL}/procesando-pago`,
-          failure: `${process.env.WEB_URL}/procesando-pago`,
+          success: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/procesando-pago`,
+          pending: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/procesando-pago`,
+          failure: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/procesando-pago`,
         },
         auto_return: 'approved'
       }

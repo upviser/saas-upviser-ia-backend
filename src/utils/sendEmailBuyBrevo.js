@@ -43,7 +43,7 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services 
                                                     ? `
                                                         <tr>
                                                             <td align="center" style="padding: 20px;">
-                                                                <a href="${process.env.WEB_URL}" target="_blank"><img src="${storeData.logo}" alt="Logo" style="width: 150px;" /><a/>
+                                                                <a href="${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}" target="_blank"><img src="${storeData.logo}" alt="Logo" style="width: 150px;" /><a/>
                                                             </td>
                                                         </tr>
                                                         <td align="center" style="Margin:0;font-size:0">

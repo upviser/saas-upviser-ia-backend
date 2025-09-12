@@ -1,11 +1,13 @@
 import Information from '../models/Information.js'
 import bizSdk, { Content } from 'facebook-nodejs-business-sdk'
 import Integrations from '../models/Integrations.js'
+import Domain from '../models/Domain.js'
 
 export const createInformation = async (req, res) => {
     try {
         const { cart, fbp, fbc } = req.body
         const integrations = await Integrations.findOne().lean()
+        const domain = await Domain.findOne().lean()
         const nuevoFinalizar = new Information(cart)
         const newInformation = await nuevoFinalizar.save()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
@@ -17,7 +19,7 @@ export const createInformation = async (req, res) => {
             const pixel_id = integrations.apiPixelId
             const api = bizSdk.FacebookAdsApi.init(access_token)
             let current_timestamp = new Date()
-            const url = `${process.env.WEB_URL}/finalizar-compra/`
+            const url = `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra/`
             const userData = (new UserData())
                 .setClientIpAddress(req.connection.remoteAddress)
                 .setClientUserAgent(req.headers['user-agent'])
