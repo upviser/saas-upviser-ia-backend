@@ -97,19 +97,13 @@ function getDaysInMonth(year, month) {
 }
 
 cron.schedule("0 0 1 * *", async () => {
-    const now = new Date()
-    const days = getDaysInMonth(now.getFullYear(), now.getMonth())
-
     const account = await ShopLogin.findOne({ type: 'Administrador' }).lean()
 
     if (account) {
-        const limitDiario = account.plan === 'Esencial' ? 100 : account.plan === 'Avanzado' ? 200 : account.plan === 'Profesional' ? 300 : 0
-        const emailsMensuales = days * limitDiario
-
         await ShopLogin.findByIdAndUpdate(account._id, {
-            emails: emailsMensuales,
+            emails: account.plan === 'Esencial' ? 2500 : account.plan === 'Avanzado' ? 5000 : account.plan === 'Profesional' ? 10000 : 0,
             imagesAI: account.plan === 'Esencial' ? 40 : account.plan === 'Avanzado' ? 80 : account.plan === 'Profesional' ? 120 : 0,
-            videosAI: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
+            videosAI: account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
             conversationsAI: account.plan === 'Esencial' ? 500 : account.plan === 'Avanzado' ? 1000 : account.plan === 'Profesional' ? 2000 : 0
         })
     }
