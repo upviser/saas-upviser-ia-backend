@@ -180,7 +180,7 @@ export const createDefaultPages = async (req, res) => {
         await newStyle.save()
         const newDomain = new Domain({ domain: 'upviser.cl', name: process.env.NAME_STORE, email: `${process.env.NAME_STORE.toLowerCase()}@upviser.cl` })
         await newDomain.save()
-        const newChatTag1 = new ChatTag({ tag: 'Compra', color: '#00FF22' })
+        const newChatTag1 = new ChatTag({ tag: 'Compra', color: '#00CE1B' })
         await newChatTag1.save()
         const newChatTag2 = new ChatTag({ tag: 'Agente IA', color: '#003CFF' })
         await newChatTag2.save()
