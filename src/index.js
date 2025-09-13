@@ -92,19 +92,15 @@ app.use(fileUpload({
 
 await loadTasks()
 
-function getDaysInMonth(year, month) {
-    return new Date(year, month + 1, 0).getDate()
-}
-
 cron.schedule("0 0 1 * *", async () => {
     const account = await ShopLogin.findOne({ type: 'Administrador' }).lean()
 
     if (account) {
         await ShopLogin.findByIdAndUpdate(account._id, {
-            emails: account.plan === 'Esencial' ? 2500 : account.plan === 'Avanzado' ? 5000 : account.plan === 'Profesional' ? 10000 : 0,
-            imagesAI: account.plan === 'Esencial' ? 40 : account.plan === 'Avanzado' ? 80 : account.plan === 'Profesional' ? 120 : 0,
-            videosAI: account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
-            conversationsAI: account.plan === 'Esencial' ? 500 : account.plan === 'Avanzado' ? 1000 : account.plan === 'Profesional' ? 2000 : 0
+            emails: account.plan === 'Esencial' ? 1000 : account.plan === 'Avanzado' ? 2000 : account.plan === 'Profesional' ? 4000 : 0,
+            imagesAI: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 60 : 0,
+            videosAI: account.plan === 'Avanzado' ? 15 : account.plan === 'Profesional' ? 30 : 0,
+            conversationsAI: account.plan === 'Esencial' ? 250 : account.plan === 'Avanzado' ? 500 : account.plan === 'Profesional' ? 1000 : 0
         })
     }
 })
