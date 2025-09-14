@@ -1,5 +1,5 @@
 import {Router} from 'express'
-import { getPhones, getMessagesPhone, newMessage, viewMessage, createTemplate, deleteTemplate, getTemplates, editTemplate, DisconnectWhatsapp } from '../controllers/whatsappMessages.js'
+import { getPhones, getMessagesPhone, newMessage, viewMessage, createTemplate, deleteTemplate, getTemplates, editTemplate, DisconnectWhatsapp, changeTag } from '../controllers/whatsappMessages.js'
 
 const router = Router()
 
@@ -10,6 +10,8 @@ router.get('/whatsapp/:id', getMessagesPhone)
 router.post('/whatsapp', newMessage)
 
 router.put('/whatsapp/:id', viewMessage)
+
+router.put('/whatsapp-tag/:id', changeTag)
 
 router.post('/whatsapp-template', createTemplate)
 
