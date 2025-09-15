@@ -179,7 +179,7 @@ export const getMessage = async (req, res) => {
                         const act = await openai.responses.parse({
                             model: "gpt-4o-mini",
                             input: [
-                                {"role": "system", "content": `Actualiza el carrito del usuario, este es su carrito actual: ${JSON.stringify(cart?.cart)}, utilizando la información adicional disponible ${information}.`},
+                                {"role": "system", "content": `En base al carrito actual del usuario: ${JSON.stringify(cart?.cart)}, actualiza el carrito agregando, quitando o editando los productos que indique el usuario, puedes utilizar la información adicional disponible: ${information}.`},
                                 ...conversation,
                                 {"role": "user", "content": message}
                             ],
@@ -229,7 +229,7 @@ export const getMessage = async (req, res) => {
                         const get = await openai.chat.completions.create({
                             model: "gpt-4o-mini",
                             messages: [
-                                {"role": "system", "content": [{"type": "text", "text": `Eres un agente para la atención al cliente, el usuario esta en una etapa de compra, en base al historial de conversación, al ultimo mensaje del usuario y a la información de este modelo: ${JSON.stringify(act.output_parsed)}. Sigue preguntando que productos busca hasta que el usuario diga todo lo que necesita comprar, tambien te puedes apoyar en esta información para hacerlo: ${information}. Si es usuario esta listo para pagar incluye este enlace ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?phone=${number}`}]},
+                                {"role": "system", "content": [{"type": "text", "text": `Eres un agente para la atención al cliente, el usuario esta en una etapa de compra, en base al historial de conversación, al ultimo mensaje del usuario y a la información del carrito actual: ${JSON.stringify(act.output_parsed)}. Sigue preguntando que productos busca hasta que el usuario diga todo lo que necesita comprar, tambien te puedes apoyar en esta información para hacerlo: ${information}. Si es usuario esta listo para pagar incluye este enlace ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?phone=${number}`}]},
                                 ...context,
                                 {"role": "user", "content": [{"type": "text", "text": message}]}
                             ],
