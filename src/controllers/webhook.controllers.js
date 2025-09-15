@@ -118,7 +118,7 @@ export const getMessage = async (req, res) => {
                                 category: product.category
                             }
                         })
-                        information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario esta buscando un producto o le quieres recomendar un produucto pon ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto.`
+                        information = `${information}. ${JSON.stringify(simplifiedProducts)}. Si el usuario esta buscando un producto o le quieres recomendar un produucto pon ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
                         const politics = await Politics.find().lean()
@@ -180,7 +180,7 @@ export const getMessage = async (req, res) => {
                         const act = await openai.responses.parse({
                             model: "gpt-4o-mini",
                             input: [
-                                {"role": "system", "content": `Evalúa si el usuario ya agrego todos los productos que necesita en base a el modelo de carrito ${JSON.stringify(cart?.cart)}, al historial de conversación y el último mensaje del usuario, si es asi establece 'ready' en true; de lo contrario, en false. Actualiza el modelo si el usuario agrego algun producto, quito alguno o modifico alguno, utilizando la información adicional disponible ${information}. Observaciones: *Si aun el usuario no especifica que no busca mas productos que ready quede en false. *No quitar productos del carrito a menos que el usuario lo solicite. *Si el usuario agrega un producto con variantes al carrito, asegurate de que elija las variantes.`},
+                                {"role": "system", "content": `Evalúa si el usuario ya agrego todos los productos que necesita en base a el modelo de carrito ${JSON.stringify(cart?.cart)}, al historial de conversación y el último mensaje del usuario, si es asi establece 'ready' en true; de lo contrario, en false. Actualiza el modelo si el usuario agrego algun producto, quito alguno o modifico alguno, utilizando la información adicional disponible ${information}. Observaciones: *Si aun el usuario no especifica que no busca mas productos que ready quede en false.`},
                                 ...conversation,
                                 {"role": "user", "content": message}
                             ],
@@ -284,7 +284,7 @@ export const getMessage = async (req, res) => {
                             ],
                             response_format: {"type": "text"},
                             temperature: 1,
-                            max_completion_tokens: 200,
+                            max_completion_tokens: 1048,
                             top_p: 1,
                             frequency_penalty: 0,
                             presence_penalty: 0,
