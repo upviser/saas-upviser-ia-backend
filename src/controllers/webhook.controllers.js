@@ -188,7 +188,7 @@ export const getMessage = async (req, res) => {
                             },
                         });
                         const enrichedCart = act.output_parsed.cart.map(item => {
-                            const product = products.find(p => p.name.normalize("NFC") === item.name.normalize("NFC"));
+                            const product = products.find(p => p.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === item.name.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                             if (!product) return null
                             let matchedVariation = null
                             if (product.variations?.variations?.length) {
