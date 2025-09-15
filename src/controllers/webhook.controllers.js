@@ -187,6 +187,7 @@ export const getMessage = async (req, res) => {
                                 format: zodTextFormat(CartSchema, "cart"),
                             },
                         });
+                        console.log(act.output_parsed.cart)
                         const enrichedCart = act.output_parsed.cart.map(item => {
                             const product = products.find(p => p.name === item.name);
                             if (!product) return null
