@@ -165,6 +165,7 @@ export const getMessage = async (req, res) => {
                             const newCart = new Cart({ cart: [], phone: number })
                             cart = await newCart.save()
                         }
+                        console.log(cart?.cart)
                         const CartSchema = z.object({
                             cart: z.array(z.object({
                                 name: z.string(),
@@ -226,6 +227,7 @@ export const getMessage = async (req, res) => {
                                 sku: matchedVariation?.sku || ''
                             };
                         }).filter(Boolean);
+                        console.log(enrichedCart)
                         await Cart.findOneAndUpdate({ phone: number }, { cart: enrichedCart })
                         if (act.output_parsed.ready) {
                             await axios.post(`https://graph.facebook.com/v22.0/${integration.idPhone}/messages`, {
