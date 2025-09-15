@@ -190,7 +190,7 @@ export const getMessage = async (req, res) => {
                         console.log(act.output_parsed.cart)
                         const enrichedCart = act.output_parsed.cart.map(item => {
                             const product = products.find(p => p.name === item.name);
-                            console.log(product)
+                            console.log(product.name)
                             if (!product) return null
                             let matchedVariation = null
                             if (product.variations?.variations?.length) {
