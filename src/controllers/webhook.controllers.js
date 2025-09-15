@@ -180,7 +180,7 @@ export const getMessage = async (req, res) => {
                         const act = await openai.responses.parse({
                             model: "gpt-4o-mini",
                             input: [
-                                {"role": "system", "content": `Evalúa si el usuario ya agrego todos los productos que necesita en base a el modelo de carrito ${JSON.stringify(cart?.cart)}, al historial de conversación y el último mensaje del usuario, si es asi establece 'ready' en true; de lo contrario, en false. Actualiza el modelo si el usuario agrego algun producto, quito alguno o modifico alguno, utilizando la información adicional disponible ${information}.`},
+                                {"role": "system", "content": `Evalúa si el usuario ya agrego todos los productos que necesita en base a su carrito actual: ${JSON.stringify(cart?.cart)}, al historial de conversación y el último mensaje del usuario, si es asi establece 'ready' en true; de lo contrario, en false. Actualiza el carrito si el usuario agrego algun producto, quito alguno o modifico alguno, utilizando la información adicional disponible ${information}.`},
                                 ...conversation,
                                 {"role": "user", "content": message}
                             ],
