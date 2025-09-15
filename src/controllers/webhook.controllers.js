@@ -189,8 +189,9 @@ export const getMessage = async (req, res) => {
                         });
                         console.log(act.output_parsed.cart)
                         const enrichedCart = act.output_parsed.cart.map(item => {
+                            console.log(item.name)
+                            console.log(products.find(p => p.name.includes('n de Algo')).name)
                             const product = products.find(p => p.name === item.name);
-                            console.log(product.name)
                             if (!product) return null
                             let matchedVariation = null
                             if (product.variations?.variations?.length) {
@@ -227,7 +228,6 @@ export const getMessage = async (req, res) => {
                                 sku: matchedVariation?.sku || ''
                             };
                         }).filter(Boolean);
-                        console.log(enrichedCart)
                         await Cart.findOneAndUpdate({ phone: number }, { cart: enrichedCart })
                         const get = await openai.chat.completions.create({
                             model: "gpt-4o-mini",
