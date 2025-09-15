@@ -187,11 +187,8 @@ export const getMessage = async (req, res) => {
                                 format: zodTextFormat(CartSchema, "cart"),
                             },
                         });
-                        console.log(act.output_parsed.cart)
                         const enrichedCart = act.output_parsed.cart.map(item => {
-                            console.log(item.name)
-                            console.log(products.find(p => p.name.includes('n de Algo')).name)
-                            const product = products.find(p => p.name === item.name);
+                            const product = products.find(p => p.name.normalize("NFC") === item.name.normalize("NFC"));
                             if (!product) return null
                             let matchedVariation = null
                             if (product.variations?.variations?.length) {
