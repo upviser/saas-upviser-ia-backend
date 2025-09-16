@@ -266,6 +266,7 @@ Devuelve 2 cosas en JSON:
                                 sku: matchedVariation?.sku || ''
                             };
                         }).filter(Boolean);
+                        await Cart.findOneAndUpdate({ phone: number }, { cart: enrichedCart })
                         await axios.post(`https://graph.facebook.com/v22.0/${integration.idPhone}/messages`, {
                             "messaging_product": "whatsapp",
                             "to": number,
