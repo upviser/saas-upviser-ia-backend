@@ -108,7 +108,7 @@ export const getMessage = async (req, res) => {
                         const productsFilter = await openai.responses.parse({
                             model: "gpt-4o-mini",
                             input: [
-                                {"role": "system", "content": `El usuario busca productos. Aquí tienes el catálogo resumido: ${JSON.stringify(nameCategories)}. Devuelve los name de los productos que podrían encajar mejor con la intención del usuario`},
+                                {"role": "system", "content": `El usuario busca productos. Aquí tienes el catálogo resumido: ${JSON.stringify(nameCategories)}. Devuelve los name de maximo 3 productos que podrían encajar mejor con la intención del usuario`},
                                 ...conversation,
                                 {"role": "user", "content": message}
                             ],
@@ -228,6 +228,7 @@ Devuelve 2 cosas en JSON:
                                 format: zodTextFormat(CartSchema, "cart"),
                             },
                         });
+                        console.log(act.output_parsed.cart)
                         const enrichedCart = act.output_parsed.cart.map(item => {
                             const product = products.find(p => p.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === item.name.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                             if (!product) return null
