@@ -219,7 +219,8 @@ Devuelve 2 cosas en JSON:
 1. "cart": el carrito actualizado (name, variation, quantity).  
 2. "message": un texto natural para enviar al usuario.  
    - Sigue preguntando qué más desea hasta que diga todo lo que quiere comprar.  
-   - Si ya está listo para pagar, comparte este enlace: ${domain?.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?phone=${number}`},
+   - Si ya está listo para pagar, comparte este enlace: ${domain?.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?phone=${number}
+   - Responde de manera breve y clara`},
                                 ...conversation,
                                 {"role": "user", "content": message}
                             ],
@@ -285,7 +286,7 @@ Devuelve 2 cosas en JSON:
                         const response = await openai.chat.completions.create({
                             model: "gpt-4o-mini",
                             messages: [
-                                {"role": "system", "content": [{"type": "text", "text": `Eres un agente para la atención al cliente del sitio web en donde debes responder las preguntas de los usuarios unicamente con la siguiente información: ${information}. *No te hagas pasar por una persona, siempre deja claro que eres un agente con inteligencia artificial.`}]},
+                                {"role": "system", "content": [{"type": "text", "text": `Eres un agente para la atención al cliente del sitio web en donde debes responder las preguntas de los usuarios unicamente con la siguiente información: ${information}. *No te hagas pasar por una persona, siempre deja claro que eres un agente con inteligencia artificial. *Responde de manera breve y clara.`}]},
                                 ...context,
                                 {"role": "user", "content": [{"type": "text", "text": message}]}
                             ],
