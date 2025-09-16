@@ -186,7 +186,7 @@ export const getMessage = async (req, res) => {
                             const newCart = new Cart({ cart: [], phone: number })
                             cart = await newCart.save()
                         }
-                        const cartMinimal = cart.cart.length ? cart.map(product => ({
+                        const cartMinimal = cart.cart.length ? cart.cart.map(product => ({
                             name: product.name,
                             variations: {
                                 variation: product.variation?.variation || '',
