@@ -119,7 +119,7 @@ export const getMessage = async (req, res) => {
                                 )
                             }
                         });
-                        const simplifiedProducts = products.filter(product => productsFilter.includes(product.name)).map(product => {
+                        const simplifiedProducts = products.filter(product => productsFilter.output_parsed.names.includes(product.name)).map(product => {
                             const variations = Array.isArray(product.variations?.variations) 
                                 ? product.variations.variations.map(v => ({
                                     variation: v.variation,
@@ -212,14 +212,14 @@ export const getMessage = async (req, res) => {
                             input: [
                                 {"role": "system", "content": `Tienes que actualizar el carrito del usuario y generar un mensaje de atención al cliente. 
       
-Carrito actual: ${JSON.stringify(minimalCart)}.  
+Carrito actual: ${JSON.stringify(cartMinimal)}.  
 Información de productos: ${information}.  
 
 Devuelve 2 cosas en JSON:
 1. "cart": el carrito actualizado (name, variation, quantity).  
 2. "message": un texto natural para enviar al usuario.  
    - Sigue preguntando qué más desea hasta que diga todo lo que quiere comprar.  
-   - Si ya está listo para pagar, comparte este enlace: ${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?phone=${number}`},
+   - Si ya está listo para pagar, comparte este enlace: ${domain?.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/finalizar-compra?phone=${number}`},
                                 ...conversation,
                                 {"role": "user", "content": message}
                             ],
