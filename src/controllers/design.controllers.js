@@ -178,7 +178,7 @@ export const createDefaultPages = async (req, res) => {
         await newDataPhone.save()
         const newStyle = new Style({ design: 'Ninguno', form: 'Cuadradas', primary: '#2167e5', button: '#ffffff' })
         await newStyle.save()
-        const newDomain = new Domain({ domain: 'upviser.cl', name: process.env.NAME_STORE, email: `${process.env.NAME_STORE.toLowerCase()}@upviser.cl` })
+        const newDomain = new Domain({ domain: 'upviser.cl', name: process.env.NAME_STORE, email: `${process.env.NAME_STORE.toLowerCase()}` })
         await newDomain.save()
         const newChatTag1 = new ChatTag({ tag: 'Compra', color: '#00CE1B' })
         await newChatTag1.save()
