@@ -143,6 +143,11 @@ export const createDefaultPages = async (req, res) => {
               ]
             },
             {
+              page: 'Blog',
+              slug: 'blog',
+              header: true
+            },
+            {
               page: 'Contacto',
               slug: 'contacto',
               header: true,
