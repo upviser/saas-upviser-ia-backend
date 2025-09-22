@@ -263,7 +263,8 @@ Devuelve 2 cosas en JSON:
                                 stock: matchedVariation?.stock ?? product.stock,
                                 category: product.category,
                                 quantityOffers: product.quantityOffers,
-                                sku: matchedVariation?.sku || ''
+                                sku: matchedVariation?.sku || '',
+                                dimentions: product.dimentions || ''
                             };
                         }).filter(Boolean);
                         await Cart.findOneAndUpdate({ phone: number }, { cart: enrichedCart })
@@ -564,7 +565,8 @@ Devuelve 2 cosas en JSON:
                                 stock: matchedVariation?.stock ?? product.stock,
                                 category: product.category,
                                 quantityOffers: product.quantityOffers,
-                                sku: matchedVariation?.sku || ''
+                                sku: matchedVariation?.sku || '',
+                                dimentions: product.dimentions || ''
                             };
                         }).filter(Boolean);
                         await Cart.findOneAndUpdate({ messengerId: sender }, { cart: enrichedCart })
@@ -871,7 +873,8 @@ Devuelve 2 cosas en JSON:
                                 stock: matchedVariation?.stock ?? product.stock,
                                 category: product.category,
                                 quantityOffers: product.quantityOffers,
-                                sku: matchedVariation?.sku || ''
+                                sku: matchedVariation?.sku || '',
+                                dimentions: product.dimentions || ''
                             };
                         }).filter(Boolean);
                         await Cart.findOneAndUpdate({ instagramId: sender }, { cart: enrichedCart })
@@ -950,6 +953,6 @@ Devuelve 2 cosas en JSON:
             return res.sendStatus(200)
         }
     } catch (error) {
-        return res.sendStatus(200)
+        return res.status(500).json({message: error.message})
     }
 }
