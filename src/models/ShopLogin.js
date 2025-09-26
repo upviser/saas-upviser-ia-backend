@@ -7,7 +7,7 @@ const ShopLoginSchema = new mongoose.Schema({
     type: { type: String, required: true },
     permissions: [{ type: String }],
     plan: { type: String },
-    textAI: { type: String },
+    textAI: { type: Number },
     imagesAI: { type: Number },
     videosAI: { type: Number },
     conversationsAI: { type: Number },
