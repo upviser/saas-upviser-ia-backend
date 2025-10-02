@@ -119,7 +119,7 @@ export const getMessage = async (req, res) => {
                                 )
                             }
                         });
-                        const simplifiedProducts = products.filter(product => productsFilter.output_parsed.names.includes(product.name)).map(product => {
+                        const simplifiedProducts = products.filter(product => productsFilter.output_parsed.names?.includes(product.name)).map(product => {
                             const variations = Array.isArray(product.variations?.variations) 
                                 ? product.variations.variations.map(v => ({
                                     variation: v.variation,
@@ -179,7 +179,7 @@ export const getMessage = async (req, res) => {
                                 )
                             }
                         });
-                        const simplifiedServices = services.filter(service => servicesFilter.output_parsed.names.includes(service.name)).map(service => {
+                        const simplifiedServices = services.filter(service => servicesFilter.output_parsed.names?.includes(service.name)).map(service => {
                             return {
                                 name: service.name,
                                 description: service.description.slice(0, 100),
@@ -214,7 +214,7 @@ export const getMessage = async (req, res) => {
                                 )
                             }
                         });
-                        const simplifiedCalls = calls.filter(call => callsFilter.output_parsed.nameMeetings.includes(call.nameMeeting)).map(call => {
+                        const simplifiedCalls = calls.filter(call => callsFilter.output_parsed.nameMeetings?.includes(call.nameMeeting)).map(call => {
                             return {
                                 type: call.type,
                                 nameMeeting: call.nameMeeting,
@@ -467,7 +467,7 @@ Devuelve 2 cosas en JSON:
                                 )
                             }
                         });
-                        const simplifiedProducts = products.filter(product => productsFilter.output_parsed.names.includes(product.name)).map(product => {
+                        const simplifiedProducts = products.filter(product => productsFilter.output_parsed.names?.includes(product.name)).map(product => {
                             const variations = Array.isArray(product.variations?.variations) 
                                 ? product.variations.variations.map(v => ({
                                     variation: v.variation,
@@ -527,7 +527,7 @@ Devuelve 2 cosas en JSON:
                                 )
                             }
                         });
-                        const simplifiedServices = services.filter(service => servicesFilter.output_parsed.names.includes(service.name)).map(service => {
+                        const simplifiedServices = services.filter(service => servicesFilter.output_parsed.names?.includes(service.name)).map(service => {
                             return {
                                 name: service.name,
                                 description: service.description.slice(0, 100),
@@ -562,7 +562,7 @@ Devuelve 2 cosas en JSON:
                                 )
                             }
                         });
-                        const simplifiedCalls = calls.filter(call => callsFilter.output_parsed.nameMeetings.includes(call.nameMeeting)).map(call => {
+                        const simplifiedCalls = calls.filter(call => callsFilter.output_parsed.nameMeetings?.includes(call.nameMeeting)).map(call => {
                             return {
                                 type: call.type,
                                 nameMeeting: call.nameMeeting,
@@ -821,7 +821,7 @@ Devuelve 2 cosas en JSON:
                                 )
                             }
                         });
-                        const simplifiedProducts = products.filter(product => productsFilter.output_parsed.names.includes(product.name)).map(product => {
+                        const simplifiedProducts = products.filter(product => productsFilter.output_parsed.names?.includes(product.name)).map(product => {
                             const variations = Array.isArray(product.variations?.variations) 
                                 ? product.variations.variations.map(v => ({
                                     variation: v.variation,
@@ -881,7 +881,7 @@ Devuelve 2 cosas en JSON:
                                 )
                             }
                         });
-                        const simplifiedServices = services.filter(service => servicesFilter.output_parsed.names.includes(service.name)).map(service => {
+                        const simplifiedServices = services.filter(service => servicesFilter.output_parsed.names?.includes(service.name)).map(service => {
                             return {
                                 name: service.name,
                                 description: service.description.slice(0, 100),
@@ -916,7 +916,7 @@ Devuelve 2 cosas en JSON:
                                 )
                             }
                         });
-                        const simplifiedCalls = calls.filter(call => callsFilter.output_parsed.nameMeetings.includes(call.nameMeeting)).map(call => {
+                        const simplifiedCalls = calls.filter(call => callsFilter.output_parsed.nameMeetings?.includes(call.nameMeeting)).map(call => {
                             return {
                                 type: call.type,
                                 nameMeeting: call.nameMeeting,
