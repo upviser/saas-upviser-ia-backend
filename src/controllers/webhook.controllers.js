@@ -17,6 +17,7 @@ import { z } from "zod";
 import ShopLogin from '../models/ShopLogin.js'
 import Notification from "../models/Notification.js"
 import Domain from '../models/Domain.js'
+import Automatization from "../models/Automatization.js"
 
 export const createWebhook = async (req, res) => {
     const storeData = await StoreData.findOne().lean()
@@ -1153,8 +1154,53 @@ Devuelve 2 cosas en JSON:
             } else {
                 return res.json({ message: 'Error: No existe el token de la app para Messenger' })
             }
-        } else {
-            return res.sendStatus(200)
+        } else if (req.body?.entry && req.body.entry[0]?.value?.text) {
+            const sender = req.body.entry[0].value.from?.id
+            const comment = req.body.entry[0].value.text
+            const id = req.body.entry[0].value.id
+            const comments = await Comment.find().lean()
+            const commentAutomatization = comments.find(com => comment.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(com.text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
+            if (commentAutomatization) {
+                const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
+                const response = await openai.chat.completions.create({
+                    model: "gpt-4o-mini",
+                    messages: [
+                        {"role": "system", "content": [{"type": "text", "text": `Estas respondiendo un comentario de Instagram de alguien que comento la palabra la cual activa una automatización, las instrucciones de la respuesta son: ${commentAutomatization.replyPromt}.`}]},
+                        ...context,
+                        {"role": "user", "content": [{"type": "text", "text": message}]}
+                    ],
+                    response_format: {"type": "text"},
+                    temperature: 1,
+                    max_completion_tokens: 1048,
+                    top_p: 1,
+                    frequency_penalty: 0,
+                    presence_penalty: 0,
+                    store: false
+                });
+                await axios.post(`https://graph.instagram.com/v23.0/${id}/replies`, {
+                    "message": response.choices[0].message.content
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
+                    "recipient": {
+                        "id": sender
+                    },
+                    "message": {
+                        "text": commentAutomatization.message
+                    }
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${integration.instagramToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                const newMessage = new InstagramMessage({instagramId: sender, message: message, response: commentAutomatization.message, agent: false, view: false, tag: 'Agente IA'})
+                await newMessage.save()
+                return res.send(newMessage)
+            }
         }
     } catch (error) {
         return res.status(500).json({message: error.message})
