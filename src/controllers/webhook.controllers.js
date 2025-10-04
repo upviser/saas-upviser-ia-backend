@@ -317,7 +317,7 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new WhatsappMessage({phone: number, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
                         const newMessageSave = await newMessage.save()
-                        return res.send({ ...newMessageSave.toObject(), cart: enrichedCart, ready: false })
+                        return res.sendStatus(200)
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         const response = await openai.chat.completions.create({
@@ -383,7 +383,7 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new WhatsappMessage({phone: number, message: message, response: response.choices[0].message.content, agent: false, view: false, tag: 'Agente IA'})
                         await newMessage.save()
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     } else {
                         await axios.post(`https://graph.facebook.com/v22.0/${integration.idPhone}/messages`, {
                             "messaging_product": "whatsapp",
@@ -398,11 +398,9 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new WhatsappMessage({phone: number, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Transferido'})
                         await newMessage.save()
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     }
                 }
-            } else {
-                return res.json({ message: 'Error: No existe el token de la app para Whatsapp' })
             }
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text && req.body.entry[0].messaging[0].recipient.id === integration.idPage) {
             const message = req.body.entry[0].messaging[0].message.text
@@ -687,7 +685,7 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new MessengerMessage({messengerId: sender, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
                         const newMessageSave = await newMessage.save()
-                        return res.send({ ...newMessageSave.toObject(), cart: enrichedCart, ready: false })
+                        return res.sendStatus(200)
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         const response = await openai.chat.completions.create({
@@ -757,7 +755,7 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new MessengerMessage({messengerId: sender, message: message, response: response.choices[0].message.content, agent: false, view: false, tag: 'Agente IA'})
                         await newMessage.save()
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     } else {
                         await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
                             "recipient": {
@@ -774,11 +772,9 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new MessengerMessage({messengerId: sender, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Transferido'})
                         await newMessage.save()
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     }
                 }
-            } else {
-                return res.json({ message: 'Error: No existe el token de la app para Messenger' })
             }
         } else if (req.body?.entry && req.body.entry[0]?.messaging && req.body.entry[0].messaging[0]?.message?.text && req.body.entry[0].messaging[0].recipient.id === integration.idInstagram) {
             const message = req.body.entry[0].messaging[0].message.text
@@ -1063,7 +1059,7 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new InstagramMessage({instagramId: sender, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
                         const newMessageSave = await newMessage.save()
-                        return res.send({ ...newMessageSave.toObject(), cart: enrichedCart, ready: false })
+                        return res.sendStatus(200)
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('soporte')) {
                         const response = await openai.chat.completions.create({
@@ -1133,7 +1129,7 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new InstagramMessage({instagramId: sender, message: message, response: response.choices[0].message.content, agent: false, view: false, tag: 'Agente IA'})
                         await newMessage.save()
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     } else {
                         await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                             "recipient": {
@@ -1150,13 +1146,12 @@ Devuelve 2 cosas en JSON:
                         })
                         const newMessage = new InstagramMessage({instagramId: sender, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Tranferido'})
                         await newMessage.save()
-                        return res.send(newMessage)
+                        return res.sendStatus(200)
                     }
                 }
-            } else {
-                return res.json({ message: 'Error: No existe el token de la app para Messenger' })
             }
         } else if (req.body?.entry && req.body.entry[0]?.changes[0]?.value?.text) {
+            if (req.body.entry[0].changes[0].value.from.id === integration.idInstagram) return
             const sender = req.body.entry[0].changes[0].value.from?.id
             const comment = req.body.entry[0].changes[0].value.text
             const idComment = req.body.entry[0].changes[0].value.id
@@ -1178,14 +1173,6 @@ Devuelve 2 cosas en JSON:
                     presence_penalty: 0,
                     store: false
                 });
-                await axios.post(`https://graph.instagram.com/v23.0/${idComment}/replies`, {
-                    "message": response.choices[0].message.content
-                }, {
-                    headers: {
-                        'Authorization': `Bearer ${integration.instagramToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                })
                 await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                     "recipient": {
                         "comment_id": idComment
@@ -1199,9 +1186,17 @@ Devuelve 2 cosas en JSON:
                         'Content-Type': 'application/json'
                     }
                 })
-                const newMessage = new InstagramMessage({instagramId: sender, message: message, response: commentAutomatization.message, agent: false, view: false, tag: 'Agente IA'})
+                const newMessage = new InstagramMessage({instagramId: sender, response: commentAutomatization.message, agent: false, view: false, tag: 'Agente IA'})
                 await newMessage.save()
-                return res.send(newMessage)
+                await axios.post(`https://graph.instagram.com/v23.0/${idComment}/replies`, {
+                    "message": response.choices[0].message.content
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${integration.instagramToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                return res.sendStatus(200)
             }
         }
     } catch (error) {
