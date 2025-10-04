@@ -30,6 +30,8 @@ export const createWebhook = async (req, res) => {
 
 export const getMessage = async (req, res) => {
     try {
+        console.log('Webhook recibido')
+        res.sendStatus(200)
         const integration = await Integration.findOne().lean()
         const domain = await Domain.findOne().lean()
         const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
@@ -1154,10 +1156,10 @@ Devuelve 2 cosas en JSON:
             } else {
                 return res.json({ message: 'Error: No existe el token de la app para Messenger' })
             }
-        } else if (req.body?.entry && req.body.entry[0]?.value?.text) {
-            const sender = req.body.entry[0].value.from?.id
-            const comment = req.body.entry[0].value.text
-            const id = req.body.entry[0].value.id
+        } else if (req.body?.entry && req.body.entry[0]?.changes[0]?.value?.text) {
+            const sender = req.body.entry[0].changes[0].value.from?.id
+            const comment = req.body.entry[0].changes[0].value.text
+            const idComment = req.body.entry[0].changes[0].value.id
             const comments = await Comment.find().lean()
             const commentAutomatization = comments.find(com => comment.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(com.text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
             if (commentAutomatization) {
@@ -1165,9 +1167,8 @@ Devuelve 2 cosas en JSON:
                 const response = await openai.chat.completions.create({
                     model: "gpt-4o-mini",
                     messages: [
-                        {"role": "system", "content": [{"type": "text", "text": `Estas respondiendo un comentario de Instagram de alguien que comento la palabra la cual activa una automatización, las instrucciones de la respuesta son: ${commentAutomatization.replyPromt}.`}]},
-                        ...context,
-                        {"role": "user", "content": [{"type": "text", "text": message}]}
+                        {"role": "system", "content": [{"type": "text", "text": `Estas respondiendo un comentario de Instagram de alguien que comento la palabra la cual activa una automatización, el siguiente mensaje sera como tiene que ser la respuesta.`}]},
+                        {"role": "user", "content": [{"type": "text", "text": commentAutomatization.replyPromt}]}
                     ],
                     response_format: {"type": "text"},
                     temperature: 1,
@@ -1177,16 +1178,17 @@ Devuelve 2 cosas en JSON:
                     presence_penalty: 0,
                     store: false
                 });
-                await axios.post(`https://graph.instagram.com/v23.0/${id}/replies`, {
+                await axios.post(`https://graph.instagram.com/v23.0/${idComment}/replies`, {
                     "message": response.choices[0].message.content
                 }, {
                     headers: {
+                        'Authorization': `Bearer ${integration.instagramToken}`,
                         'Content-Type': 'application/json'
                     }
                 })
                 await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                     "recipient": {
-                        "id": sender
+                        "comment_id": idComment
                     },
                     "message": {
                         "text": commentAutomatization.message
