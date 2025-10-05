@@ -152,7 +152,7 @@ export const getMessage = async (req, res) => {
                                 typePrice: service.typePrice,
                                 typePay: service.typePay,
                                 firstStep: service.firstStep,
-                                plans: service.plans?.plans?.map(p => ({
+                                plans: service.plans?.plans?.length && service.plans?.plans[0].name &&service.plans?.plans[0].name !== '' && service.plans?.plans?.map(p => ({
                                     name: p.name,
                                     description: p.description.slice(0, 100),
                                     price: p.price,
@@ -165,7 +165,7 @@ export const getMessage = async (req, res) => {
                                 }))
                             }
                         })
-                        information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug).` : ''}`
+                        information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug). El link que quedecon espacios a los lados para asegurar el correcto funcionamiento en cualquier formato.` : ''}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
                         const politics = await Politics.find().lean()
@@ -519,7 +519,7 @@ Devuelve 2 cosas en JSON:
                                 typePrice: service.typePrice,
                                 typePay: service.typePay,
                                 firstStep: service.firstStep,
-                                plans: service.plans?.plans?.map(p => ({
+                                plans: service.plans?.plans?.length && service.plans?.plans[0].name &&service.plans?.plans[0].name !== '' && service.plans?.plans?.map(p => ({
                                     name: p.name,
                                     description: p.description.slice(0, 100),
                                     price: p.price,
@@ -532,7 +532,7 @@ Devuelve 2 cosas en JSON:
                                 }))
                             }
                         })
-                        information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug).` : ''}`
+                        information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug). El link que quedecon espacios a los lados para asegurar el correcto funcionamiento en cualquier formato.` : ''}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
                         const politics = await Politics.find().lean()
@@ -894,7 +894,7 @@ Devuelve 2 cosas en JSON:
                                 typePrice: service.typePrice,
                                 typePay: service.typePay,
                                 firstStep: service.firstStep,
-                                plans: service.plans?.plans?.map(p => ({
+                                plans: service.plans?.plans?.length && service.plans?.plans[0].name &&service.plans?.plans[0].name !== '' && service.plans?.plans?.map(p => ({
                                     name: p.name,
                                     description: p.description.slice(0, 100),
                                     price: p.price,
@@ -907,7 +907,7 @@ Devuelve 2 cosas en JSON:
                                 }))
                             }
                         })
-                        information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug).` : ''}`
+                        information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug). El link que quedecon espacios a los lados para asegurar el correcto funcionamiento en cualquier formato.` : ''}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
                         const politics = await Politics.find().lean()
