@@ -127,9 +127,10 @@ export const responseMessage = async (req, res) => {
                         typeService: service.typeService,
                         typePrice: service.typePrice,
                         typePay: service.typePay,
+                        firstStep: service.firstStep,
                         plans: service.plans?.plans?.map(p => ({
                             name: p.name,
-                            description: p.description,
+                            description: p.description.slice(0, 100),
                             price: p.price,
                             anualPrice: p.anualPrice,
                             characteristics: p.characteristics,

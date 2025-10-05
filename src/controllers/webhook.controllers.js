@@ -154,7 +154,7 @@ export const getMessage = async (req, res) => {
                                 firstStep: service.firstStep,
                                 plans: service.plans?.plans?.map(p => ({
                                     name: p.name,
-                                    description: p.description,
+                                    description: p.description.slice(0, 100),
                                     price: p.price,
                                     anualPrice: p.anualPrice,
                                     characteristics: p.characteristics,
@@ -518,9 +518,10 @@ Devuelve 2 cosas en JSON:
                                 typeService: service.typeService,
                                 typePrice: service.typePrice,
                                 typePay: service.typePay,
+                                firstStep: service.firstStep,
                                 plans: service.plans?.plans?.map(p => ({
                                     name: p.name,
-                                    description: p.description,
+                                    description: p.description.slice(0, 100),
                                     price: p.price,
                                     anualPrice: p.anualPrice,
                                     characteristics: p.characteristics,
@@ -892,9 +893,10 @@ Devuelve 2 cosas en JSON:
                                 typeService: service.typeService,
                                 typePrice: service.typePrice,
                                 typePay: service.typePay,
+                                firstStep: service.firstStep,
                                 plans: service.plans?.plans?.map(p => ({
                                     name: p.name,
-                                    description: p.description,
+                                    description: p.description.slice(0, 100),
                                     price: p.price,
                                     anualPrice: p.anualPrice,
                                     characteristics: p.characteristics,
