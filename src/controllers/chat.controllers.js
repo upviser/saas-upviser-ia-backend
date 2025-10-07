@@ -18,8 +18,10 @@ export const responseMessage = async (req, res) => {
         const message = req.body.message
         const senderId = req.body.senderId
         const messages = await ChatMessage.find({ senderId: senderId }).select('-senderId -_id -adminView -userView -agent').sort({ createdAt: -1 }).limit(2).lean();
-        if (!messages.length) {
+        if (!messages.length && shopLogin.conversationsAI > 1) {
             await ShopLogin.findByIdAndUpdate(shopLogin._id, { conversationsAI: shopLogin.conversationsAI - 1 })
+        } else if (!messages.length && shopLogin.conversationsAIAdd) {
+            await ShopLogin.findByIdAndUpdate(shopLogin._id, { conversationsAIAdd: shopLogin.conversationsAIAdd + 1 })
         }
         if (!req.body.agent || shopLogin.conversationsAI < 1) {
             const newMessage = new ChatMessage({senderId: senderId, message: message, agent: false, adminView: false, userView: true, tag: messages[0].tag})

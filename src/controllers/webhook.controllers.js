@@ -41,10 +41,12 @@ export const getMessage = async (req, res) => {
             const number = req.body.entry[0].changes[0].value.messages[0].from
             if (integration.whatsappToken && integration.whatsappToken !== '') {
                 const messages = await WhatsappMessage.find({phone: number}).select('-phone -_id').sort({ createdAt: -1 }).limit(2).lean()
-                if (!messages.length) {
+                if (!messages.length && shopLogin.conversationsAI > 1) {
                     await ShopLogin.findByIdAndUpdate(shopLogin._id, { conversationsAI: shopLogin.conversationsAI - 1 })
+                } else if (!messages.length && shopLogin.conversationsAIAdd) {
+                    await ShopLogin.findByIdAndUpdate(shopLogin._id, { conversationsAIAdd: shopLogin.conversationsAIAdd + 1 })
                 }
-                if ((messages && messages.length && messages[0].agent) || shopLogin.conversationsAI < 1) {
+                if ((messages && messages.length && messages[0].agent) || (shopLogin.conversationsAI < 1 && !shopLogin.conversationsAIAdd)) {
                     const newMessage = new WhatsappMessage({phone: number, message: message, agent: true, view: false, tag: messages[0].tag})
                     await newMessage.save()
                     io.emit('whatsapp', newMessage)

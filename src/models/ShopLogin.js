@@ -11,7 +11,12 @@ const ShopLoginSchema = new mongoose.Schema({
     imagesAI: { type: Number },
     videosAI: { type: Number },
     conversationsAI: { type: Number },
-    emails: { type: Number }
+    emails: { type: Number },
+    textAIAdd: { type: Number },
+    imagesAIAdd: { type: Number },
+    videosAIAdd: { type: Number },
+    conversationsAIAdd: { type: Number },
+    emailsAdd: { type: Number }
 }, {
     timestamps: true
 })

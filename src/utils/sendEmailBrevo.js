@@ -111,7 +111,7 @@ export const sendEmailBrevo = async ({ subscribers, emailData, clientData, store
             tags: [id]
         };
         const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
-        if (shopLogin.emails > 0) {
+        if (shopLogin?.emails > 0) {
             await updateClientEmailStatus(subscriber.email, {
                 id: id,
                 automatizationId: automatizationId,
@@ -122,6 +122,17 @@ export const sendEmailBrevo = async ({ subscribers, emailData, clientData, store
             const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
             console.log('API called successfully. Returned data: ' + JSON.stringify(data));
             await ShopLogin.findByIdAndUpdate(shopLogin._id, { emails: shopLogin.emails - 1 })
+        } else if (shopLogin?.emailAdd) {
+            await updateClientEmailStatus(subscriber.email, {
+                id: id,
+                automatizationId: automatizationId,
+                subject: emailData.affair,
+                opened: false,
+                clicked: false
+            });
+            const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
+            console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+            await ShopLogin.findByIdAndUpdate(shopLogin._id, { emailsAdd: shopLogin.emailsAdd + 1 })
         }
     })
 }

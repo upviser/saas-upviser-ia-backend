@@ -141,6 +141,15 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services 
         const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
         console.log('API called successfully. Returned data: ' + JSON.stringify(data));
         await ShopLogin.findByIdAndUpdate(shopLogin._id, { emails: shopLogin.emails - 1 })
+    } else if (shopLogin?.emailsAdd) {
+        await updateClientEmailStatus(sell?.email ? sell.email : pay?.email, {
+            id: id,
+            subject: `¡Hola ${sell?.firstName ? sell.firstName : pay?.firstName}! Tu compra ha sido realizada con exito`,
+            opened: false,
+            clicked: false
+        });
+        const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
+        console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+        await ShopLogin.findByIdAndUpdate(shopLogin._id, { emailsAdd: shopLogin.emailsAdd + 1 })
     }
-    
 }
