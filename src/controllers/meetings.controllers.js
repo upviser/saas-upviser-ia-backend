@@ -12,6 +12,7 @@ import { isTokenExpired } from '../utils/zoom.js'
 import Integrations from '../models/Integrations.js'
 import Style from '../models/Style.js'
 import Domain from '../models/Domain.js'
+import qs from 'qs'
 
 export const editCalendar = async (req, res) => {
     try {
@@ -66,18 +67,17 @@ export const CreateMeeting = async (req, res) => {
             const domain = await Domain.findOne().lean()
             let token
             if (isTokenExpired(integrations.zoomCreateToken, integrations.zoomExpiresIn)) {
-                const response = await axios.post('https://zoom.us/oauth/token', null, {
+                const response = await axios.post('https://zoom.us/oauth/token', qs.stringify({
+                    grant_type: 'refresh_token',
+                    refresh_token: integrations.zoomRefreshToken
+                }), {
                     headers: {
                         'Authorization': `Basic ${Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64')}`,
                         'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    params: {
-                        "grant_type": "account_credentials",
-                        "account_id": integrations.zoomAccountId
                     }
                 })
                 token = response.data.access_token
-                await Integrations.findByIdAndUpdate(integrations._id, { zoomToken: token, zoomExpiresIn: response.data.expires_in, zoomCreateToken: new Date() }, { new: true })
+                await Integrations.findByIdAndUpdate(integrations._id, { zoomToken: token, zoomRefreshToken: response.data.refresh_token, zoomExpiresIn: response.data.expires_in, zoomCreateToken: new Date() }, { new: true })
             } else {
                 token = integrations.zoomToken
             }
@@ -153,7 +153,8 @@ export const CreateMeeting = async (req, res) => {
             const clientData = await ClientData.find()
             const storeData = await StoreData.find()
             const style = await Style.find()
-            await sendEmailBrevo({ subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu llamada ha sido agendada con exito`, title: 'Hemos agendado tu llamada exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu llamada con fecha ${new Date(req.body.date).getUTCDate()}/${new Date(req.body.date).getUTCMonth() + 1}/${new Date(req.body.date).getUTCFullYear()} a las ${new Date(req.body.date).getUTCHours()}:${new Date(req.body.date).getUTCMinutes() >= 9 ? new Date(req.body.date).getUTCMinutes() : `0${new Date(req.body.date).getUTCMinutes()}`} ha sido agendada con exito, aqui te dejamos el acceso a la llamada en el siguiente boton, para cualquier consulta comunicate con nostros a traves de nuestro Whatsapp +56${storeData[0].phone}.`, buttonText: 'Ingresar a la llamada', url: meetingResponse.data.start_url }, clientData: clientData, storeData: storeData[0], style: style[0] })
+            const date = moment.tz(req.body.date, 'America/Santiago')
+            await sendEmailBrevo({ subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu llamada ha sido agendada con exito`, title: 'Hemos agendado tu llamada exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu llamada con fecha ${date.date()}/${date.month() + 1}/${date.year()} a las ${date.hours()}:${date.minutes() >= 9 ? date.minutes() : `0${date.minutes()}`} ha sido agendada con exito, aqui te dejamos el acceso a la llamada en el siguiente boton, para cualquier consulta comunicate con nostros a traves de nuestro Whatsapp +56${storeData[0].phone}.`, buttonText: 'Ingresar a la llamada', url: meetingResponse.data.start_url }, clientData: clientData, storeData: storeData[0], style: style[0] })
         } else {
             const integrations = await Integrations.findOne().lean()
             const domain = await Domain.findOne().lean()
