@@ -27,7 +27,7 @@ export const redirectZoom = async (req, res) => {
     await axios.post(`${process.env.MAIN_API_URL}/user`, { api: clientApi, zoomState: state })
     const authUrl = `https://zoom.us/oauth/authorize?response_type=code`
         + `&client_id=${process.env.ZOOM_CLIENT_ID}`
-        + `&redirect_uri=${encodeURIComponent(process.env.ZOOM_REDIRECT_URI)}`;
+        + `&redirect_uri=${encodeURIComponent(process.env.ZOOM_REDIRECT_URI)}`
         + `&state=${state}`
     res.redirect(authUrl);
 }
