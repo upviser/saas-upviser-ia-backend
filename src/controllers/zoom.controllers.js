@@ -31,3 +31,23 @@ export const redirectZoom = async (req, res) => {
         + `&state=${state}`
     res.redirect(authUrl);
 }
+
+export const removeZoom = async (req, res) => {
+    try {
+        const integrations = await Integrations.findOne().lean()
+        const params = new URLSearchParams()
+        params.append('token', integrations.zoomToken)
+        await axios.post('https://zoom.us/oauth/revoke', params, 
+            {
+                headers: {
+                    'Authorization': `Basic ${Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64')}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }
+        )
+        await Integrations.findByIdAndUpdate(integrations._id, { zoomAccountId: '', zoomToken: '', zoomRefreshToken: '', zoomCreateToken: '', zoomExpiresIn: '' }, { new: true })
+        return res.json({ success: 'OK' })
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
+}
