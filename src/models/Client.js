@@ -40,6 +40,7 @@ const emailSchema = new mongoose.Schema({
 })
 
 const ClientSchema = new mongoose.Schema({
+  tenantId: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   firstName: { type: String },
   lastName: { type: String },

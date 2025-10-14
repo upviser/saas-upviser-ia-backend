@@ -5,8 +5,9 @@ import Domain from '../models/Domain.js'
 
 export const viewCheckout = async (req, res) => {
     try {
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
             const Content = bizSdk.Content
             const CustomData = bizSdk.CustomData
@@ -51,7 +52,7 @@ export const viewCheckout = async (req, res) => {
                 }
             )
         }
-        const checkoutView = new Checkout(req.body)
+        const checkoutView = new Checkout({...req.body, tenantId})
         const checkoutViewSave = await checkoutView.save()
         return res.json(checkoutViewSave)
     } catch (error) {

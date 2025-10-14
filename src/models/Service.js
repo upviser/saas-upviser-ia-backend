@@ -12,6 +12,7 @@ const stepSchema = new mongoose.Schema({
 })
 
 const ServiceSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     name: { type: String, required: true },
     description: { type: String },
     steps: [stepSchema],

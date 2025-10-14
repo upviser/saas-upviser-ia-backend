@@ -26,6 +26,7 @@ const ProductSchema = new mongoose.Schema({
 })
 
 const CartSchema = new mongoose.Schema({
+  tenantId: { type: String, required: true },
   phone: { type: Number },
   instagramId: { type: String },
   messengerId: { type: String },

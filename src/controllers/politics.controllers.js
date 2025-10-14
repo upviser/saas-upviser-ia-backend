@@ -2,11 +2,12 @@ import Politics from '../models/Politics.js'
 
 export const createPolitics = async (req, res) => {
     try {
-        const data = await Politics.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const data = await Politics.findOne({ tenantId }).lean()
         if (data) {
             await Politics.findOneAndDelete(data._id)
         }
-        const newPolitics = new Politics(req.body)
+        const newPolitics = new Politics({...req.body, tenantId})
         await newPolitics.save()
         return res.send(newPolitics)
     } catch (error) {
@@ -16,7 +17,8 @@ export const createPolitics = async (req, res) => {
 
 export const getPolitics = async (req, res) => {
     try {
-        const politics = await Politics.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const politics = await Politics.findOne({ tenantId }).lean()
         if (!politics) return res.json({})
         return res.json(politics)
     } catch (error) {
@@ -26,7 +28,8 @@ export const getPolitics = async (req, res) => {
 
 export const getPolitic = async (req, res) => {
     try {
-        const politic = await Politics.findOne().select(`${req.params.id}`).lean()
+        const tenantId = req.headers['x-tenant-id']
+        const politic = await Politics.findOne({ tenantId }).select(`${req.params.id}`).lean()
         if (!politic) return res.sendStatus(204)
         return res.send(politic)
     } catch (error) {

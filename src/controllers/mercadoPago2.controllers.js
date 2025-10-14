@@ -3,8 +3,9 @@ import Paym from '../models/Payment.js'
 import Domain from '../models/Domain.js'
 
 export const createOrder = async (req, res) => {
-  const paymentData = await Paym.findOne()
-  const domain = await Domain.findOne().lean()
+  const tenantId = req.headers['x-tenant-id']
+  const paymentData = await Paym.findOne({ tenantId }).lean()
+  const domain = await Domain.findOne({ tenantId }).lean()
   const client = new MercadoPagoConfig({ accessToken: paymentData.mercadoPago.accessToken });
   const preference = new Preference(client);
 
@@ -29,6 +30,7 @@ export const createOrder = async (req, res) => {
 
 export const receiveWebhook = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     return res.json({
       Payment: req.query.payment_id,
       Status: req.query.status,

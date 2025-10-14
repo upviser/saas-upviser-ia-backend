@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const SellSchema = mongoose.Schema({
+  tenantId: { type: String, required: true },
   buyOrder: { type: String, required: true, unique: true },
   email: { type: String, required: true, trim: true },
   region: { type: String, required: true, trim: true },

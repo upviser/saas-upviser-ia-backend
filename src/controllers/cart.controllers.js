@@ -2,6 +2,7 @@ import Cart from '../models/Cart.js'
 
 export const getCart = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { id } = req.params;
 
         if (!id) {
@@ -17,7 +18,7 @@ export const getCart = async (req, res) => {
             ]
         };
 
-        const cart = await Cart.findOne(filter).exec();
+        const cart = await Cart.findOne({...filter, tenantId}).exec();
 
         if (!cart) {
             return res.status(404).json({ message: 'Carrito no encontrado' });

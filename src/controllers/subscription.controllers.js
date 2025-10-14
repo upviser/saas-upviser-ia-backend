@@ -4,8 +4,9 @@ import Domain from '../models/Domain.js'
 
 export const createSubscription = async (req, res) => {
     try {
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
             const EventRequest = bizSdk.EventRequest
             const UserData = bizSdk.UserData

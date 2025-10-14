@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const IntegrationsSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     idPhone: { type: String },
     waba: { type: String },
     whatsappToken: { type: String },

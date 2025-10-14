@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const ChatSchema = mongoose.Schema({
+    tenantId: { type: String, required: true },
     senderId: { type: String, required: true },
     message: { type: String },
     response: { type: String },

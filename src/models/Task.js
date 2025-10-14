@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const TaskSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     dateCron: { type: String },
     subscriber: { type: String },
     subscribers: [{ type: String }],

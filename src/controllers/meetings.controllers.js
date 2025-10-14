@@ -16,9 +16,10 @@ import qs from 'qs'
 
 export const editCalendar = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const calendar = await Calendar.findOne({ name: req.body.name }).lean()
         if (calendar === null) {
-            const newCalendar = new Calendar(req.body)
+            const newCalendar = new Calendar({...req.body, tenantId})
             const newCalendarSave = await newCalendar.save()
             return res.json(newCalendarSave)
         } else {
@@ -32,7 +33,8 @@ export const editCalendar = async (req, res) => {
 
 export const getCalendar = async (req, res) => {
     try {
-        const calendar = await Calendar.find()
+        const tenantId = req.headers['x-tenant-id']
+        const calendar = await Calendar.find({ tenantId })
         if (!calendar) {
             return res.status(404).json({ message: "No tiene calendarios creados" });
         }
@@ -44,6 +46,7 @@ export const getCalendar = async (req, res) => {
 
 export const getOneCalendar = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const calendar = await Calendar.findById(req.params.id)
         return res.json(calendar)
     } catch (error) {
@@ -53,6 +56,7 @@ export const getOneCalendar = async (req, res) => {
 
 export const deleteCalendar = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const deleteCalendar = await Calendar.findByIdAndDelete(req.params.id)
         return res.json(deleteCalendar)
     } catch (error) {
@@ -62,9 +66,10 @@ export const deleteCalendar = async (req, res) => {
 
 export const CreateMeeting = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         if (req.body.type === 'Llamada por Zoom') {
-            const integrations = await Integrations.findOne().lean()
-            const domain = await Domain.findOne().lean()
+            const integrations = await Integrations.findOne({ tenantId }).lean()
+            const domain = await Domain.findOne({ tenantId }).lean()
             let token
             if (isTokenExpired(integrations.zoomCreateToken, integrations.zoomExpiresIn)) {
                 const response = await axios.post('https://zoom.us/oauth/token', qs.stringify({
@@ -140,24 +145,24 @@ export const CreateMeeting = async (req, res) => {
                     }
                 )
             }
-            const newMeeting = new Meeting({ ...req.body, url: meetingResponse.data.start_url})
+            const newMeeting = new Meeting({ ...req.body, url: meetingResponse.data.start_url, tenantId})
             const newMeetingSave = await newMeeting.save()
             const client = await Client.findOne({ email: req.body.email })
             if (client) {
                 await axios.post(`${process.env.API_URL}/clients`, req.body)
             } else {
-                const newClient = new Client(req.body)
+                const newClient = new Client({...req.body, tenantId})
                 await newClient.save()
             }
             res.json(newMeetingSave)
-            const clientData = await ClientData.find()
-            const storeData = await StoreData.find()
-            const style = await Style.find()
+            const clientData = await ClientData.find({ tenantId }).lean()
+            const storeData = await StoreData.find({ tenantId }).lean()
+            const style = await Style.find({ tenantId }).lean()
             const date = moment.tz(req.body.date, 'America/Santiago')
-            await sendEmailBrevo({ subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu llamada ha sido agendada con exito`, title: 'Hemos agendado tu llamada exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu llamada con fecha ${date.date()}/${date.month() + 1}/${date.year()} a las ${date.hours()}:${date.minutes() >= 9 ? date.minutes() : `0${date.minutes()}`} ha sido agendada con exito, aqui te dejamos el acceso a la llamada en el siguiente boton, para cualquier consulta comunicate con nostros a traves de nuestro Whatsapp +56${storeData[0].phone}.`, buttonText: 'Ingresar a la llamada', url: meetingResponse.data.start_url }, clientData: clientData, storeData: storeData[0], style: style[0] })
+            await sendEmailBrevo({ tenantId, subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu llamada ha sido agendada con exito`, title: 'Hemos agendado tu llamada exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu llamada con fecha ${date.date()}/${date.month() + 1}/${date.year()} a las ${date.hours()}:${date.minutes() >= 9 ? date.minutes() : `0${date.minutes()}`} ha sido agendada con exito, aqui te dejamos el acceso a la llamada en el siguiente boton, para cualquier consulta comunicate con nostros a traves de nuestro Whatsapp +56${storeData[0].phone}.`, buttonText: 'Ingresar a la llamada', url: meetingResponse.data.start_url }, clientData: clientData, storeData: storeData[0], style: style[0] })
         } else {
-            const integrations = await Integrations.findOne().lean()
-            const domain = await Domain.findOne().lean()
+            const integrations = await Integrations.findOne({ tenantId }).lean()
+            const domain = await Domain.findOne({ tenantId }).lean()
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
@@ -206,22 +211,22 @@ export const CreateMeeting = async (req, res) => {
                     }
                 )
             }
-            const newMeeting = new Meeting(req.body)
+            const newMeeting = new Meeting({...req.body, tenantId})
             const newMeetingSave = await newMeeting.save()
             const client = await Client.findOne({ email: req.body.email })
             if (client) {
                 await axios.post(`${process.env.API_URL}/clients`, req.body)
             } else {
-                const newClient = new Client(req.body)
+                const newClient = new Client({...req.body, tenantId})
                 await newClient.save()
             }
             res.json(newMeetingSave)
-            const clientData = await ClientData.find()
-            const storeData = await StoreData.find()
-            const style = await Style.find()
+            const clientData = await ClientData.find({ tenantId }).lean()
+            const storeData = await StoreData.find({ tenantId }).lean()
+            const style = await Style.find({ tenantId }).lean()
             const fechaUtc = moment.utc(req.body.date); // Interpretar como UTC
             const fechaLocal = fechaUtc.tz("America/Santiago")
-            await sendEmailBrevo({ subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu visita ha sido agendada con exito`, title: 'Hemos agendado tu visita exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu visita con fecha ${fechaLocal.date()}/${fechaLocal.month() + 1}/${fechaLocal.year()} a las ${fechaLocal.format("HH:mm")} ha sido agendada con exito, la visita sera en ${req.body.type === 'Visita a domicilio' ? `${req.body.address}, ${req.body.city}, ${req.body.region}.` : `${storeData[0].address}, ${storeData[0].city}, ${storeData[0].region}.`} Para cualquier consulta comunicate con nosotros a través de nuestro Whatsapp.`, buttonText: 'Hablar por Whatsapp', url: `https://wa.me/+56${storeData[0].phone}` }, clientData: clientData, storeData: storeData[0], style: style[0] })
+            await sendEmailBrevo({ tenantId, subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu visita ha sido agendada con exito`, title: 'Hemos agendado tu visita exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu visita con fecha ${fechaLocal.date()}/${fechaLocal.month() + 1}/${fechaLocal.year()} a las ${fechaLocal.format("HH:mm")} ha sido agendada con exito, la visita sera en ${req.body.type === 'Visita a domicilio' ? `${req.body.address}, ${req.body.city}, ${req.body.region}.` : `${storeData[0].address}, ${storeData[0].city}, ${storeData[0].region}.`} Para cualquier consulta comunicate con nosotros a través de nuestro Whatsapp.`, buttonText: 'Hablar por Whatsapp', url: `https://wa.me/+56${storeData[0].phone}` }, clientData: clientData, storeData: storeData[0], style: style[0] })
         }
     } catch (error) {
         console.log(error)
@@ -231,18 +236,19 @@ export const CreateMeeting = async (req, res) => {
 
 export const deleteMeeting = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const meetingDelete = await Meeting.findOneAndDelete(req.params.id)
         res.json(meetingDelete)
         if (meetingDelete.type === 'Llamada por Zoom') {
-            const clientData = await ClientData.find()
-            const storeData = await StoreData.find()
-            const style = await Style.find()
+            const clientData = await ClientData.find({ tenantId }).lean()
+            const storeData = await StoreData.find({ tenantId }).lean()
+            const style = await Style.find({ tenantId }).lean()
             await sendEmailBrevo({ subscribers: [{ name: meetingDelete.firstName, email: meetingDelete.email }], emailData: { affair: `Hola ${meetingDelete.firstName}, tu llamada ha sido cancelada`, title: 'Lamentablemente tu llamada ha sido cancelada', paragraph: `Hola ${meetingDelete.firstName}, te queriamos avisar que tu llamada con nosotros ha sido cancelada, para cualquier consulta comunicate con nosotrosa través de nuestro Whatsapp.`, buttonText: 'Hablar por Whatsapp', url: `https://wa.me/+569${storeData[0].phone}` }, clientData: clientData, storeData: storeData[0], style: style[0] })
         } else {
-            const clientData = await ClientData.find()
-            const storeData = await StoreData.find()
-            const style = await Style.find()
-            await sendEmailBrevo({ subscribers: [{ name: meetingDelete.firstName, email: meetingDelete.email }], emailData: { affair: `Hola ${meetingDelete.firstName}, tu visita ha sido cancelada`, title: 'Lamentablemente tu visita ha sido cancelada', paragraph: `Hola ${meetingDelete.firstName}, te queriamos avisar que tu visita con nosotros ha sido cancelada, para cualquier consulta comunicate con nosotros a través de nuestro Whatsapp.`, buttonText: 'Hablar por Whatsapp', url: `https://wa.me/+569${storeData[0].phone}` }, clientData: clientData, storeData: storeData[0], style: style[0] })
+            const clientData = await ClientData.find({ tenantId }).lean()
+            const storeData = await StoreData.find({ tenantId }).lean()
+            const style = await Style.find({ tenantId }).lean()
+            await sendEmailBrevo({ tenantId, subscribers: [{ name: meetingDelete.firstName, email: meetingDelete.email }], emailData: { affair: `Hola ${meetingDelete.firstName}, tu visita ha sido cancelada`, title: 'Lamentablemente tu visita ha sido cancelada', paragraph: `Hola ${meetingDelete.firstName}, te queriamos avisar que tu visita con nosotros ha sido cancelada, para cualquier consulta comunicate con nosotros a través de nuestro Whatsapp.`, buttonText: 'Hablar por Whatsapp', url: `https://wa.me/+569${storeData[0].phone}` }, clientData: clientData, storeData: storeData[0], style: style[0] })
         }
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -251,7 +257,8 @@ export const deleteMeeting = async (req, res) => {
 
 export const getMeetings = async (req, res) => {
     try {
-        const meetings = await Meeting.find()
+        const tenantId = req.headers['x-tenant-id']
+        const meetings = await Meeting.find({ tenantId })
         return res.json(meetings)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -260,6 +267,7 @@ export const getMeetings = async (req, res) => {
 
 export const getMeeting = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const meeting = await Meeting.findById(req.params.id)
         return res.json(meeting)
     } catch (error) {
@@ -269,6 +277,7 @@ export const getMeeting = async (req, res) => {
 
 export const getMeetingsEmail = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const meetings = await Meeting.find({ email: req.params.email })
         return res.json(meetings)
     } catch (error) {

@@ -2,7 +2,8 @@ import Service from '../models/Service.js'
 
 export const createService = async (req, res) => {
     try {
-        const newService = new Service(req.body)
+        const tenantId = req.headers['x-tenant-id']
+        const newService = new Service(...req.body, tenantId)
         const newServiceSave = await newService.save()
         return res.json(newServiceSave)
     } catch (error) {
@@ -12,7 +13,8 @@ export const createService = async (req, res) => {
 
 export const getServices = async (req, res) => {
     try {
-        const services = await Service.find()
+        const tenantId = req.headers['x-tenant-id']
+        const services = await Service.find({ tenantId })
         return res.json(services)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -21,6 +23,7 @@ export const getServices = async (req, res) => {
 
 export const getService = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const service = await Service.findById(req.params.id)
         return res.json(service)
     } catch (error) {
@@ -30,6 +33,7 @@ export const getService = async (req, res) => {
 
 export const editService = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const serviceEdit = await Service.findByIdAndUpdate(req.params.id, req.body, { new: true })
         return res.json(serviceEdit)
     } catch (error) {
@@ -39,6 +43,7 @@ export const editService = async (req, res) => {
 
 export const deleteService = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const serviceDelete = await Service.findByIdAndDelete(req.params.id)
         return res.json(serviceDelete)
     } catch (error) {
@@ -48,6 +53,7 @@ export const deleteService = async (req, res) => {
 
 export const updateServiceStep = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { _id, ...updatedData } = req.body;
 
         // Encuentra el documento Funnel que contiene el paso a actualizar

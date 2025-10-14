@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const productSchema = new mongoose.Schema({
+  tenantId: { type: String, required: true },
   name: { type: String, required: true },
   description: { type: String, required: true },
   dimentions: { weight: { type: Number }, height: { type: Number }, width: { type: Number }, length: { type: Number } },

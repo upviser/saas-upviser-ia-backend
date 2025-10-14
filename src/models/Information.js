@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const InformationSchema = mongoose.Schema({
+  tenantId: { type: String, required: true },
   cart: { type: Array, required: true }
 }, {
   timestamps: true

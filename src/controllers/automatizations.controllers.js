@@ -10,6 +10,7 @@ import Style from '../models/Style.js'
 
 export const createAutomatization = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { startType, startValue, automatization } = req.body
         const emails = []
         let previousDate = new Date()
@@ -27,11 +28,11 @@ export const createAutomatization = async (req, res) => {
                 emails.push(email)
                 previousDate = currentDate
             }
-            const newAutomatization = new Automatization({ ...req.body, automatization: emails })
+            const newAutomatization = new Automatization({ ...req.body, automatization: emails, tenantId })
             const newAutomatizationSave = await newAutomatization.save()
             res.json(newAutomatizationSave)
         } else {
-            const newAutomatization = new Automatization({ startType, name: req.body.name, text: req.body.text, replyPromt: req.body.replyPromt, message: req.body.message })
+            const newAutomatization = new Automatization({ tenantId, startType, name: req.body.name, text: req.body.text, replyPromt: req.body.replyPromt, message: req.body.message })
             const newAutomatizationSave = await newAutomatization.save()
             res.json(newAutomatizationSave)
         }
@@ -39,11 +40,12 @@ export const createAutomatization = async (req, res) => {
             if (Number(email.number) === 0) {
                 let subscribers = []
                 if (startType === 'Formulario completado') {
-                    subscribers = await Client.find({ 'forms.form': startValue }).lean()
+                    subscribers = await Client.find({ tenantId, 'forms.form': startValue }).lean()
                 } else if (startType === 'Llamada agendada') {
-                    subscribers = await Client.find({ 'meetings.meeting': startValue }).lean()
+                    subscribers = await Client.find({ tenantId, 'meetings.meeting': startValue }).lean()
                 } else if (startType === 'Ingreso a un servicio') {
                     subscribers = await Client.find({
+                        tenantId,
                         services: {
                             $elemMatch: {
                                 service: startValue,
@@ -52,11 +54,11 @@ export const createAutomatization = async (req, res) => {
                         }
                     }).lean();
                 } else if (startType === 'Añadido a una etapa de un embudo') {
-                    subscribers = await Client.find({ 'funnels.step': startValue }).lean()
+                    subscribers = await Client.find({ tenantId, 'funnels.step': startValue }).lean()
                 } else if (startType === 'Añadido a una etapa de un servicio') {
-                    subscribers = await Client.find({ 'services.step': startValue }).lean()
+                    subscribers = await Client.find({ tenantId, 'services.step': startValue }).lean()
                 } else if (startType === 'Tag añadido') {
-                    subscribers = await Client.find({ tags: startValue }).lean()
+                    subscribers = await Client.find({ tenantId, tags: startValue }).lean()
                 }
                 const filteredSubscribers = subscribers.filter(subscriber => {
                     if (email.condition.length === 0) {
@@ -66,18 +68,19 @@ export const createAutomatization = async (req, res) => {
                         !subscriber.tags.includes(condition) || !subscriber.tags.includes('desuscrito')
                     );
                 });
-                const clientData = await ClientData.find()
-                const storeData = await StoreData.find()
-                const style = await Style.findOne()
-                sendEmailBrevo({ subscribers: filteredSubscribers, emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: newAutomatizationSave._id, style: style })
+                const clientData = await ClientData.find({ tenantId })
+                const storeData = await StoreData.find({ tenantId })
+                const style = await Style.findOne({ tenantId })
+                sendEmailBrevo({ tenantId, subscribers: filteredSubscribers, emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: newAutomatizationSave._id, style: style })
             } else {
                 let subscribers = []
                 if (startType === 'Formulario completado') {
-                    subscribers = await Client.find({ 'forms.form': startValue }).lean()
+                    subscribers = await Client.find({ tenantId, 'forms.form': startValue }).lean()
                 } else if (startType === 'Llamada agendada') {
-                    subscribers = await Client.find({ 'meetings.meeting': startValue }).lean()
+                    subscribers = await Client.find({ tenantId, 'meetings.meeting': startValue }).lean()
                 } else if (startType === 'Ingreso a un servicio') {
                     subscribers = await Client.find({
+                        tenantId,
                         services: {
                             $elemMatch: {
                                 service: startValue,
@@ -86,18 +89,18 @@ export const createAutomatization = async (req, res) => {
                         }
                     }).lean();
                 } else if (startType === 'Añadido a una etapa de un embudo') {
-                    subscribers = await Client.find({ 'funnels.step': startValue }).lean()
+                    subscribers = await Client.find({ tenantId, 'funnels.step': startValue }).lean()
                 } else if (startType === 'Añadido a una etapa de un servicio') {
-                    subscribers = await Client.find({ 'services.step': startValue }).lean()
+                    subscribers = await Client.find({ tenantId, 'services.step': startValue }).lean()
                 } else if (startType === 'Tag añadido') {
-                    subscribers = await Client.find({ tags: startValue }).lean()
+                    subscribers = await Client.find({ tenantId, tags: startValue }).lean()
                 }
                 const dateCron = formatDateToCron(new Date(email.date))
                 const newTask = new Task({ dateCron: dateCron, subscribers: subscribers.map(subscriber => subscriber.email), startType: startType, startValue: startValue, emailData: email, condition: email.condition })
                 await newTask.save()
                 cron.schedule(dateCron, async () => {
                     const emails = subscribers.map(subscriber => subscriber.email);
-                    const updatedSubscribers = await Client.find({ email: { $in: emails } }).lean()
+                    const updatedSubscribers = await Client.find({ tenantId, email: { $in: emails } }).lean()
                     const filteredSubscribers = updatedSubscribers.filter(subscriber => {
                         const tagsCondition = (email.condition.length === 0 && !subscriber.tags.includes('desuscrito')) || (subscriber.condition.some(tag => !subscriber.tags.includes(tag) || !subscriber.tags.includes('desuscrito')))
                         let funnelOrServiceCondition = true
@@ -108,9 +111,9 @@ export const createAutomatization = async (req, res) => {
                         }
                         return tagsCondition && funnelOrServiceCondition
                     });
-                    const clientData = await ClientData.find()
-                    const storeData = await StoreData.find()
-                    const style = await Style.findOne()
+                    const clientData = await ClientData.find({ tenantId })
+                    const storeData = await StoreData.find({ tenantId })
+                    const style = await Style.findOne({ tenantId })
                     sendEmailBrevo({ subscribers: filteredSubscribers, emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: newAutomatizationSave._id, style: style })
                 })
             }
@@ -122,7 +125,8 @@ export const createAutomatization = async (req, res) => {
 
 export const getAutomatizations = async (req, res) => {
     try {
-        const automatizations = await Automatization.find().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const automatizations = await Automatization.find({ tenantId }).lean()
         return res.send(automatizations)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -131,6 +135,7 @@ export const getAutomatizations = async (req, res) => {
 
 export const getAutomatization = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const automatization = await Automatization.findById(req.params.id).lean()
         if (!automatization) {
             return res.sendStatus(404)
@@ -143,6 +148,7 @@ export const getAutomatization = async (req, res) => {
 
 export const deleteAutomatization = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const automatizationDelete = await Automatization.findByIdAndDelete(req.params.id)
         return res.send(automatizationDelete)
     } catch (error) {
@@ -152,6 +158,7 @@ export const deleteAutomatization = async (req, res) => {
 
 export const editAutomatizacion = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const automatizationEdit = await Automatization.findByIdAndUpdate(req.params.id, req.body, { new: true })
         return res.json(automatizationEdit)
     } catch (error) {

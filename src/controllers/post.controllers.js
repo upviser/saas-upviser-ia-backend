@@ -2,7 +2,8 @@ import Post from '../models/Post.js'
 
 export const CreatePost = async (req, res) => {
     try {
-        const newPost = new Post(req.body)
+        const tenantId = req.headers['x-tenant-id']
+        const newPost = new Post({...req.body, tenantId})
         await newPost.save()
         return res.send(newPost)
     } catch (error) {
@@ -12,7 +13,8 @@ export const CreatePost = async (req, res) => {
 
 export const getPosts = async (req, res) => {
     try {
-        const posts = await Post.find().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const posts = await Post.find({ tenantId }).lean()
         if (!posts) return res.sendStatus(204)
         return res.send(posts)
     } catch (error) {
@@ -22,6 +24,7 @@ export const getPosts = async (req, res) => {
 
 export const getPost = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const post = await Post.findById(req.params.id)
         if (!post) return res.sendStatus(204)
         return res.send(post)
@@ -32,6 +35,7 @@ export const getPost = async (req, res) => {
 
 export const updatePost = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const postUpdate = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true })
         if (!postUpdate) return res.sendStatus(204)
         return res.send(postUpdate)
@@ -42,6 +46,7 @@ export const updatePost = async (req, res) => {
 
 export const deletePost = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const postDelete = await Post.findByIdAndRemove(req.params.id)
         return res.json(postDelete)
     } catch (error) {

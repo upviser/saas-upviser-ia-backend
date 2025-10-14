@@ -2,7 +2,8 @@ import Session from '../models/Session.js'
 
 export const createSession = async (req, res) => {
     try {
-        const newSession = new Session(req.body)
+        const tenantId = req.headers['x-tenant-id']
+        const newSession = new Session(...req.body, tenantId)
         const newSessionSave = await newSession.save()
         return res.json(newSessionSave)
     } catch (error) {
@@ -12,7 +13,8 @@ export const createSession = async (req, res) => {
 
 export const getSessions = async (req, res) => {
     try {
-        const sessions = await Session.find()
+        const tenantId = req.headers['x-tenant-id']
+        const sessions = await Session.find({ tenantId })
         return res.json(sessions)
     } catch (error) {
         return res.status(500).json({message: error.message})

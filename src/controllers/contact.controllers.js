@@ -5,9 +5,10 @@ import Domain from '../models/Domain.js'
 
 export const createMessage = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const {name, email, message, images, fbp, fbc} = req.body
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
             const EventRequest = bizSdk.EventRequest
             const UserData = bizSdk.UserData
@@ -41,7 +42,7 @@ export const createMessage = async (req, res) => {
                     }
                 )
         }
-        const nuevoMensaje = new Contact({name, email, message, images})
+        const nuevoMensaje = new Contact({tenantId, name, email, message, images})
         await nuevoMensaje.save()
         return res.json(nuevoMensaje)
     } catch (error) {
@@ -51,7 +52,8 @@ export const createMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
     try {
-        const mensajes = await Contact.find()
+        const tenantId = req.headers['x-tenant-id']
+        const mensajes = await Contact.find({ tenantId }).lean()
         res.send(mensajes)
     } catch (error) {
         return res.status(500).json({message: error.message})

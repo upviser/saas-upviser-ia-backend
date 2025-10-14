@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const StoreDataSchema = mongoose.Schema({
+  tenantId: { type: String, required: true },
   name: { type: String, required: true },
   nameContact: { type: String },
   email: { type: String, required: true },

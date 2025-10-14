@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const ChilexpressSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     active: { type: Boolean },
     coberturaKey: { type: String },
     cotizadorKey: { type: String },

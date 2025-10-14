@@ -4,7 +4,7 @@ import { NumberFormat } from '../utils/NumberFormat.js'
 import ShopLogin from '../models/ShopLogin.js'
 import Domain from '../models/Domain.js'
 
-export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services }) => {
+export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services, tenantId }) => {
 
     let apiInstance = new brevo.TransactionalEmailsApi()
 
@@ -19,7 +19,7 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services 
         service = services.find(service => service._id.toString() === pay.service)
     }
 
-    const domain = await Domain.findOne().lean()
+    const domain = await Domain.findOne({ tenantId }).lean()
 
     let sendSmtpEmail = new brevo.SendSmtpEmail()
     sendSmtpEmail = {
@@ -130,7 +130,7 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services 
         `,
         tags: [id]
     };
-    const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
+    const shopLogin = await ShopLogin.findOne({ tenantId, type: 'Administrador' })
     if (shopLogin?.emails > 0) {
         await updateClientEmailStatus(sell?.email ? sell.email : pay?.email, {
             id: id,

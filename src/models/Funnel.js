@@ -12,6 +12,7 @@ const stepSchema = new mongoose.Schema({
 })
 
 const FunnelSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     funnel: { type: String, required: true, unique: true },
     description: { type: String },
     service: { type: String },

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const TagSchema = mongoose.Schema({
+  tenantId: { type: String, required: true },
   tag: { type: String, required: true }
 }, {
   timestamps: true

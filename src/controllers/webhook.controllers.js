@@ -20,6 +20,7 @@ import Domain from '../models/Domain.js'
 import Automatization from "../models/Automatization.js"
 
 export const createWebhook = async (req, res) => {
+    const tenantId = req.headers['x-tenant-id']
     const storeData = await StoreData.findOne().lean()
     if (req.query['hub.verify_token'] === `${storeData.name}_token`) {
         res.send(req.query['hub.challenge'])
@@ -30,11 +31,12 @@ export const createWebhook = async (req, res) => {
 
 export const getMessage = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         console.log('Webhook recibido')
         res.sendStatus(200)
-        const integration = await Integration.findOne().lean()
-        const domain = await Domain.findOne().lean()
-        const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
+        const integration = await Integration.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
+        const shopLogin = await ShopLogin.findOne({ tenantId, type: 'Administrador' })
         if (req.body?.entry && req.body.entry[0]?.changes && req.body.entry[0].changes[0]?.value?.messages && 
             req.body.entry[0].changes[0].value.messages[0]?.text && req.body.entry[0].changes[0].value.messages[0].text.body) {  
             const message = req.body.entry[0].changes[0].value.messages[0].text.body
@@ -47,10 +49,10 @@ export const getMessage = async (req, res) => {
                     await ShopLogin.findByIdAndUpdate(shopLogin._id, { conversationsAIAdd: shopLogin.conversationsAIAdd + 1 })
                 }
                 if ((messages && messages.length && messages[0].agent) || (shopLogin.conversationsAI < 1 && !shopLogin.conversationsAIAdd)) {
-                    const newMessage = new WhatsappMessage({phone: number, message: message, agent: true, view: false, tag: messages[0].tag})
+                    const newMessage = new WhatsappMessage({tenantId, phone: number, message: message, agent: true, view: false, tag: messages[0].tag})
                     await newMessage.save()
                     io.emit('whatsapp', newMessage)
-                    const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Whatsapp', url: '/mensajes', view: false })
+                    const notification = new Notification({ tenantId, title: 'Nuevo mensaje', description: 'Nuevo mensaje de Whatsapp', url: '/mensajes', view: false })
                     await notification.save()
                     io.emit('newNotification')
                     return res.sendStatus(200)
@@ -83,7 +85,7 @@ export const getMessage = async (req, res) => {
                     });
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('productos') || JSON.stringify(type.output_parsed).toLowerCase().includes('servicios')) {
-                        products = await Product.find().lean()
+                        products = await Product.find({ tenantId }).lean()
                         const nameCategories = products.map(product => {
                             return {
                                 name: product.name,
@@ -124,7 +126,7 @@ export const getMessage = async (req, res) => {
                                 category: product.category
                             }
                         })
-                        const services = await Service.find().lean();
+                        const services = await Service.find({ tenantId }).lean();
                         const nameDescriptions = services.map(service => {
                             return {
                                 name: service.name,
@@ -169,23 +171,23 @@ export const getMessage = async (req, res) => {
                         information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug). El link que quedecon espacios a los lados para asegurar el correcto funcionamiento en cualquier formato.` : ''}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].shipping).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('horarios') || JSON.stringify(type.output_parsed).toLowerCase().includes('ubicación') || JSON.stringify(type.output_parsed).toLowerCase().includes('saludo')) {
-                        const storeData = await StoreData.find().lean()
+                        const storeData = await StoreData.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(storeData[0]).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('garantia') || JSON.stringify(type.output_parsed).toLowerCase().includes('devoluciones')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].devolutions).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('metodos de pago')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].pay).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('agendamientos')) {
-                        const calls = await Call.find().select('-_id -labels -buttonText -tags -action -message').lean()
+                        const calls = await Call.find({ tenantId }).select('-_id -labels -buttonText -tags -action -message').lean()
                         const nameDescriptions = calls.map(call => {
                             return {
                                 nameMeeting: call.nameMeeting,
@@ -221,7 +223,7 @@ export const getMessage = async (req, res) => {
                         let cart
                         cart = await Cart.findOne({ phone: number }).lean()
                         if (!cart) {
-                            const newCart = new Cart({ cart: [], phone: number })
+                            const newCart = new Cart({ tenantId, cart: [], phone: number })
                             cart = await newCart.save()
                         }
                         const cartMinimal = cart.cart.length ? cart.cart.map(product => ({
@@ -317,7 +319,7 @@ Devuelve 2 cosas en JSON:
                                 "Authorization": `Bearer ${integration.whatsappToken}`
                             }
                         })
-                        const newMessage = new WhatsappMessage({phone: number, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
+                        const newMessage = new WhatsappMessage({tenantId, phone: number, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
                         const newMessageSave = await newMessage.save()
                         return res.sendStatus(200)
                     }
@@ -348,10 +350,10 @@ Devuelve 2 cosas en JSON:
                                 "Authorization": `Bearer ${integration.whatsappToken}`
                             }
                         })
-                        const newMessage = new WhatsappMessage({ phone: number, message: message, response: response.choices[0].message.content, agent: true, view: false, tag: 'Transferido' })
+                        const newMessage = new WhatsappMessage({ tenantId, phone: number, message: message, response: response.choices[0].message.content, agent: true, view: false, tag: 'Transferido' })
                         await newMessage.save()
                         io.emit('whatsapp', newMessage)
-                        const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Whatsapp', url: '/mensajes', view: false })
+                        const notification = new Notification({ tenantId, title: 'Nuevo mensaje', description: 'Nuevo mensaje de Whatsapp', url: '/mensajes', view: false })
                         await notification.save()
                         io.emit('newNotification')
                         return res.sendStatus(200)
@@ -383,7 +385,7 @@ Devuelve 2 cosas en JSON:
                                 "Authorization": `Bearer ${integration.whatsappToken}`
                             }
                         })
-                        const newMessage = new WhatsappMessage({phone: number, message: message, response: response.choices[0].message.content, agent: false, view: false, tag: 'Agente IA'})
+                        const newMessage = new WhatsappMessage({tenantId, phone: number, message: message, response: response.choices[0].message.content, agent: false, view: false, tag: 'Agente IA'})
                         await newMessage.save()
                         return res.sendStatus(200)
                     } else {
@@ -398,7 +400,7 @@ Devuelve 2 cosas en JSON:
                                 "Authorization": `Bearer ${integration.whatsappToken}`
                             }
                         })
-                        const newMessage = new WhatsappMessage({phone: number, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Transferido'})
+                        const newMessage = new WhatsappMessage({tenantId, phone: number, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Transferido'})
                         await newMessage.save()
                         return res.sendStatus(200)
                     }
@@ -413,10 +415,10 @@ Devuelve 2 cosas en JSON:
                     await ShopLogin.findByIdAndUpdate(shopLogin._id, { conversationsAI: shopLogin.conversationsAI - 1 })
                 }
                 if ((messages && messages.length && messages[0].agent) || shopLogin.conversationsAI < 1) {
-                    const newMessage = new MessengerMessage({messengerId: sender, message: message, agent: true, view: false, tag: messages[0].tag})
+                    const newMessage = new MessengerMessage({tenantId, messengerId: sender, message: message, agent: true, view: false, tag: messages[0].tag})
                     await newMessage.save()
                     io.emit('messenger', newMessage)
-                    const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Messenger', url: '/mensajes', view: false })
+                    const notification = new Notification({ tenantId, title: 'Nuevo mensaje', description: 'Nuevo mensaje de Messenger', url: '/mensajes', view: false })
                     await notification.save()
                     io.emit('newNotification')
                     return res.sendStatus(200)
@@ -449,7 +451,7 @@ Devuelve 2 cosas en JSON:
                     })
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('productos') || JSON.stringify(type.output_parsed).toLowerCase().includes('servicios')) {
-                        products = await Product.find().lean()
+                        products = await Product.find({ tenantId }).lean()
                         const nameCategories = products.map(product => {
                             return {
                                 name: product.name,
@@ -535,23 +537,23 @@ Devuelve 2 cosas en JSON:
                         information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug). El link que quedecon espacios a los lados para asegurar el correcto funcionamiento en cualquier formato.` : ''}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].shipping).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('horarios') || JSON.stringify(type.output_parsed).toLowerCase().includes('ubicación') || JSON.stringify(type.output_parsed).toLowerCase().includes('saludo')) {
-                        const storeData = await StoreData.find().lean()
+                        const storeData = await StoreData.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(storeData[0]).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('garantia') || JSON.stringify(type.output_parsed).toLowerCase().includes('devoluciones')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].devolutions).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('metodos de pago')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].pay).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('agendamientos')) {
-                        const calls = await Call.find().select('-_id -labels -buttonText -tags -action -message').lean()
+                        const calls = await Call.find({ tenantId }).select('-_id -labels -buttonText -tags -action -message').lean()
                         const nameDescriptions = calls.map(call => {
                             return {
                                 nameMeeting: call.nameMeeting,
@@ -587,7 +589,7 @@ Devuelve 2 cosas en JSON:
                         let cart
                         cart = await Cart.findOne({ messengerId: sender }).lean()
                         if (!cart) {
-                            const newCart = new Cart({ cart: [], messengerId: sender })
+                            const newCart = new Cart({ tenantId, cart: [], messengerId: sender })
                             cart = await newCart.save()
                         }
                         const cartMinimal = cart.cart.length ? cart.cart.map(product => ({
@@ -685,7 +687,7 @@ Devuelve 2 cosas en JSON:
                                 'Content-Type': 'application/json'
                             }
                         })
-                        const newMessage = new MessengerMessage({messengerId: sender, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
+                        const newMessage = new MessengerMessage({tenantId, messengerId: sender, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
                         const newMessageSave = await newMessage.save()
                         return res.sendStatus(200)
                     }
@@ -718,10 +720,10 @@ Devuelve 2 cosas en JSON:
                                 'Content-Type': 'application/json'
                             }
                         })
-                        const newMessage = new MessengerMessage({messengerId: sender, message: message, response: response.choices[0].message.content, agent: true, view: false, tag: 'Transferido' })
+                        const newMessage = new MessengerMessage({tenantId, messengerId: sender, message: message, response: response.choices[0].message.content, agent: true, view: false, tag: 'Transferido' })
                         await newMessage.save()
                         io.emit('messenger', newMessage)
-                        const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Messenger', url: '/mensajes', view: false })
+                        const notification = new Notification({ tenantId, title: 'Nuevo mensaje', description: 'Nuevo mensaje de Messenger', url: '/mensajes', view: false })
                         await notification.save()
                         io.emit('newNotification')
                         return res.sendStatus(200)
@@ -755,7 +757,7 @@ Devuelve 2 cosas en JSON:
                                 'Content-Type': 'application/json'
                             }
                         })
-                        const newMessage = new MessengerMessage({messengerId: sender, message: message, response: response.choices[0].message.content, agent: false, view: false, tag: 'Agente IA'})
+                        const newMessage = new MessengerMessage({tenantId, messengerId: sender, message: message, response: response.choices[0].message.content, agent: false, view: false, tag: 'Agente IA'})
                         await newMessage.save()
                         return res.sendStatus(200)
                     } else {
@@ -772,7 +774,7 @@ Devuelve 2 cosas en JSON:
                                 'Content-Type': 'application/json'
                             }
                         })
-                        const newMessage = new MessengerMessage({messengerId: sender, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Transferido'})
+                        const newMessage = new MessengerMessage({tenantId, messengerId: sender, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Transferido'})
                         await newMessage.save()
                         return res.sendStatus(200)
                     }
@@ -787,10 +789,10 @@ Devuelve 2 cosas en JSON:
                     await ShopLogin.findByIdAndUpdate(shopLogin._id, { conversationsAI: shopLogin.conversationsAI - 1 })
                 }
                 if ((messages && messages.length && messages[0].agent) || shopLogin.conversationsAI < 1) {
-                    const newMessage = new InstagramMessage({instagramId: sender, message: message, agent: true, view: false, tag: messages[0].tag})
+                    const newMessage = new InstagramMessage({tenantId, instagramId: sender, message: message, agent: true, view: false, tag: messages[0].tag})
                     await newMessage.save()
                     io.emit('instagram', newMessage)
-                    const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Instagram', url: '/mensajes', view: false })
+                    const notification = new Notification({ tenantId, title: 'Nuevo mensaje', description: 'Nuevo mensaje de Instagram', url: '/mensajes', view: false })
                     await notification.save()
                     io.emit('newNotification')
                     return res.sendStatus(200)
@@ -823,7 +825,7 @@ Devuelve 2 cosas en JSON:
                     });
                     let information = ''
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('productos') || JSON.stringify(type.output_parsed).toLowerCase().includes('servicios')) {
-                        products = await Product.find().lean()
+                        products = await Product.find({ tenantId }).lean()
                         const nameCategories = products.map(product => {
                             return {
                                 name: product.name,
@@ -864,7 +866,7 @@ Devuelve 2 cosas en JSON:
                                 category: product.category
                             }
                         })
-                        const services = await Service.find().lean();
+                        const services = await Service.find({ tenantId }).lean();
                         const nameDescriptions = services.map(service => {
                             return {
                                 name: service.name,
@@ -909,23 +911,23 @@ Devuelve 2 cosas en JSON:
                         information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon ${process.env.WEB_URL}/tienda/(slug de la categoria)/(slug del producto) para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página ${process.env.WEB_URL}/(firstStep.slug). El link que quedecon espacios a los lados para asegurar el correcto funcionamiento en cualquier formato.` : ''}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].shipping).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('horarios') || JSON.stringify(type.output_parsed).toLowerCase().includes('ubicación') || JSON.stringify(type.output_parsed).toLowerCase().includes('saludo')) {
-                        const storeData = await StoreData.find().lean()
+                        const storeData = await StoreData.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(storeData[0]).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('garantia') || JSON.stringify(type.output_parsed).toLowerCase().includes('devoluciones')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].devolutions).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('metodos de pago')) {
-                        const politics = await Politics.find().lean()
+                        const politics = await Politics.find({ tenantId }).lean()
                         information = `${information}. ${JSON.stringify(politics[0].pay).replaceAll('"', '')}`
                     }
                     if (JSON.stringify(type.output_parsed).toLowerCase().includes('agendamientos')) {
-                        const calls = await Call.find().select('-_id -labels -buttonText -tags -action -message').lean()
+                        const calls = await Call.find({ tenantId }).select('-_id -labels -buttonText -tags -action -message').lean()
                         const nameDescriptions = calls.map(call => {
                             return {
                                 nameMeeting: call.nameMeeting,
@@ -961,7 +963,7 @@ Devuelve 2 cosas en JSON:
                         let cart
                         cart = await Cart.findOne({ instagramId: sender }).lean()
                         if (!cart) {
-                            const newCart = new Cart({ cart: [], instagramId: sender })
+                            const newCart = new Cart({ tenantId, cart: [], instagramId: sender })
                             cart = await newCart.save()
                         }
                         const cartMinimal = cart.cart.length ? cart.cart.map(product => ({
@@ -1059,7 +1061,7 @@ Devuelve 2 cosas en JSON:
                                 'Content-Type': 'application/json'
                             }
                         })
-                        const newMessage = new InstagramMessage({instagramId: sender, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
+                        const newMessage = new InstagramMessage({tenantId, instagramId: sender, message: message, response: act.output_parsed.message, agent: false, view: false, tag: 'Productos'})
                         const newMessageSave = await newMessage.save()
                         return res.sendStatus(200)
                     }
@@ -1092,10 +1094,10 @@ Devuelve 2 cosas en JSON:
                                 'Content-Type': 'application/json'
                             }
                         })
-                        const newMessage = new InstagramMessage({instagramId: sender, message: message, response: response.choices[0].message.content, agent: true, view: false, tag: 'Transferido' })
+                        const newMessage = new InstagramMessage({tenantId, instagramId: sender, message: message, response: response.choices[0].message.content, agent: true, view: false, tag: 'Transferido' })
                         await newMessage.save()
                         io.emit('instagram', newMessage)
-                        const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje de Instagram', url: '/mensajes', view: false })
+                        const notification = new Notification({ tenantId, title: 'Nuevo mensaje', description: 'Nuevo mensaje de Instagram', url: '/mensajes', view: false })
                         await notification.save()
                         io.emit('newNotification')
                         return res.sendStatus(200)
@@ -1146,7 +1148,7 @@ Devuelve 2 cosas en JSON:
                                 'Content-Type': 'application/json'
                             }
                         })
-                        const newMessage = new InstagramMessage({instagramId: sender, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Tranferido'})
+                        const newMessage = new InstagramMessage({tenantId, instagramId: sender, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: true, view: false, tag: 'Tranferido'})
                         await newMessage.save()
                         return res.sendStatus(200)
                     }
@@ -1157,7 +1159,7 @@ Devuelve 2 cosas en JSON:
             const sender = req.body.entry[0].changes[0].value.from?.id
             const comment = req.body.entry[0].changes[0].value.text
             const idComment = req.body.entry[0].changes[0].value.id
-            const comments = await Comment.find().lean()
+            const comments = await Comment.find({ tenantId }).lean()
             const commentAutomatization = comments.find(com => comment.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(com.text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
             if (commentAutomatization) {
                 const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
@@ -1188,7 +1190,7 @@ Devuelve 2 cosas en JSON:
                         'Content-Type': 'application/json'
                     }
                 })
-                const newMessage = new InstagramMessage({instagramId: sender, response: commentAutomatization.message, agent: false, view: false, tag: 'Agente IA'})
+                const newMessage = new InstagramMessage({tenantId, instagramId: sender, response: commentAutomatization.message, agent: false, view: false, tag: 'Agente IA'})
                 await newMessage.save()
                 await axios.post(`https://graph.instagram.com/v23.0/${idComment}/replies`, {
                     "message": response.choices[0].message.content

@@ -5,8 +5,9 @@ import Domain from '../models/Domain.js'
 
 export const createLead = async (req, res) => {
     try {
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
             const Content = bizSdk.Content
             const CustomData = bizSdk.CustomData
@@ -52,7 +53,7 @@ export const createLead = async (req, res) => {
                 }
             )
         }
-        const newLead = new Lead(req.body)
+        const newLead = new Lead({...req.body, tenantId})
         const newLeadSave = await newLead.save()
         return res.json(newLeadSave)
     } catch (error) {
@@ -62,7 +63,8 @@ export const createLead = async (req, res) => {
 
 export const getLeads = async (req, res) => {
     try {
-        const leads = await Lead.find()
+        const tenantId = req.headers['x-tenant-id']
+        const leads = await Lead.find({ tenantId }).lean()
         return res.json(leads)
     } catch (error) {
         return res.status(500).json({message: error.message})

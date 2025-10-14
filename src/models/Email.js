@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const EmailSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     address: { type: String, required: true },
     affair: { type: String, required: true },
     title: { type: String },

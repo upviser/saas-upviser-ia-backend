@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const LeadSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     form: { type: String },
     page: { type: String },
     service: { type: String },

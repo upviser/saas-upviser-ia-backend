@@ -2,13 +2,15 @@ import AddCart from '../models/AddCart.js'
 import bizSdk from 'facebook-nodejs-business-sdk'
 import Integrations from '../models/Integrations.js'
 import Domain from '../models/Domain.js'
+import jwt from 'jsonwebtoken'
 
 export const createAddCart = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const {product, fbp, fbc} = req.body
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
-        const nuevoAñadir = new AddCart({quantity: product.quantity, name: product.name, price: product.price, category: product.category.category})
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
+        const nuevoAñadir = new AddCart({tenantId,quantity: product.quantity, name: product.name, price: product.price, category: product.category.category})
         const newAddToCart = await nuevoAñadir.save()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
             const Content = bizSdk.Content
@@ -66,7 +68,8 @@ export const createAddCart = async (req, res) => {
 
 export const getAddCart = async (req, res) => {
     try {
-        const data = await AddCart.find()
+        const tenantId = req.headers['x-tenant-id']
+        const data = await AddCart.find({ tenantId })
         return res.send(data)
     } catch (error) {
         return res.status(500).json({message: error.message})

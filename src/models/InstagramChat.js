@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const InstagramMessageSchema = mongoose.Schema({
+    tenantId: { type: String, required: true },
     instagramId: { type: String, required: true },
     message: { type: String },
     response: { type: String },

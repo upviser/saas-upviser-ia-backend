@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const FormSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     nameForm: { type: String, required: true, unique: true },
     title: { type: String },
     informations: [{ icon: { type: String }, text: { type: String }, subText: { type: String } }],

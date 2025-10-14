@@ -2,7 +2,8 @@ import Product from '../models/Product.js'
 
 export const getProducts = async (req, res) => {
     try {
-        const products = await Product.find()
+        const tenantId = req.headers['x-tenant-id']
+        const products = await Product.find({ tenantId })
         .lean()
         return res.send(products)
     } catch (error) {
@@ -12,8 +13,9 @@ export const getProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const data = req.body
-        const nuevoProducto = new Product(data)
+        const nuevoProducto = new Product({...data, tenantId})
         await nuevoProducto.save()
         return res.json(nuevoProducto)
     } catch (error) {
@@ -23,6 +25,7 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const updateProducto = await Product.findByIdAndUpdate(req.params.id, req.body, {new: true})
         return res.send(updateProducto)
     } catch (error) {
@@ -32,6 +35,7 @@ export const updateProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const productRemoved = await Product.findByIdAndDelete(req.params.id)
         if (!productRemoved) return res.sendStatus(404)
         return res.sendStatus(204)
@@ -41,6 +45,7 @@ export const deleteProduct = async (req, res) => {
 }
 
 export const getProductBySlug = async (req, res) => {
+    const tenantId = req.headers['x-tenant-id']
     const product = await Product.findOne({slug: req.params.id}).lean()
   
     if ( !product ) {
@@ -52,6 +57,7 @@ export const getProductBySlug = async (req, res) => {
 
 export const updateStockProduct = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const product = await Product.findById(req.params.id).select('stock variations')
         const stock = product.stock - req.body.stock
         if (stock < 0) {
@@ -92,7 +98,8 @@ export const updateStockProduct = async (req, res) => {
 
 export const getProductByCategory = async (req, res) => {
     try {
-        const products = await Product.find({ 'category.category': req.params.id }).lean()
+        const tenantId = req.headers['x-tenant-id']
+        const products = await Product.find({ tenantId, 'category.category': req.params.id }).lean()
         return res.send(products)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -101,6 +108,7 @@ export const getProductByCategory = async (req, res) => {
 
 export const getProductData = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const product = await Product.findById(req.params.id).select('-_id stock price beforePrice variations').lean()
         return res.send(product)
     } catch (error) {
@@ -110,6 +118,7 @@ export const getProductData = async (req, res) => {
 
 export const createReview = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const productUpdate = await Product.findByIdAndUpdate(
       req.params.id,
       { $push: { reviews: req.body } }, // 👈 agrega el nuevo review

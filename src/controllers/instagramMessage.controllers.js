@@ -4,7 +4,11 @@ import Integration from '../models/Integrations.js'
 
 export const getInstagramIds = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         InstagramMessage.aggregate([
+            {
+                $match: { tenantId }
+            },
             {
                 $sort: { instagramId: 1, _id: -1 }
             },
@@ -44,6 +48,7 @@ export const getInstagramIds = async (req, res) => {
 
 export const getMessagesInstagram = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await InstagramMessage.find({instagramId: req.params.id}).lean()
         res.send(messages)
     } catch (error) {
@@ -53,7 +58,8 @@ export const getMessagesInstagram = async (req, res) => {
 
 export const createMessage = async (req, res) => {
     try {
-        const integration = await Integration.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integration = await Integration.findOne({ tenantId }).lean()
         if (integration.instagramToken && integration.instagramToken !== '') {
             await axios.post(`https://graph.instagram.com/v23.0/${integration.idInstagram}/messages`, {
                 "recipient": {
@@ -69,7 +75,7 @@ export const createMessage = async (req, res) => {
                 }
             })
             const ultMessage = await InstagramMessage.findOne({ instagramId: req.body.instagramId }).sort({ createdAt: -1 })
-            const newMessage = new InstagramMessage({instagramId: req.body.instagramId, response: req.body.response, agent: req.body.agent, view: req.body.view, tag: ultMessage.tag})
+            const newMessage = new InstagramMessage({tenantId, instagramId: req.body.instagramId, response: req.body.response, agent: req.body.agent, view: req.body.view, tag: ultMessage.tag})
             await newMessage.save()
             return res.sendStatus(200)
         } else {
@@ -82,6 +88,7 @@ export const createMessage = async (req, res) => {
 
 export const viewMessage = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await InstagramMessage.find({instagramId: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -95,6 +102,7 @@ export const viewMessage = async (req, res) => {
 
 export const changeTag = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await InstagramMessage.find({instagramId: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -108,7 +116,8 @@ export const changeTag = async (req, res) => {
 
 export const deleteInstagram = async (req, res) => {
     try {
-        const integrations = await Integration.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integration.findOne({ tenantId }).lean()
         await axios.delete(
             `https://graph.instagram.com/v23.0/${integrations.idInstagram}/subscribed_apps`,
             {

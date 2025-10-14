@@ -2,8 +2,9 @@ import Client from "../models/Client.js"
 
 export const desubscribeClient = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const client = await Client.findOneAndUpdate(
-            { email: req.params.email },
+            { email: req.params.email, tenantId },
             { $addToSet: { tags: 'desuscrito' } },
             { new: true }
         );

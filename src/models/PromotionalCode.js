@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const PromotionalCodeSchema = new mongoose.Schema({
+  tenantId: { type: String, required: true },
   promotionalCode: { type: String, required: true, unique: true },
   discountType: { type: String, required: true },
   value: { type: Number, required: true },

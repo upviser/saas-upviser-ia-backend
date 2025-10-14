@@ -1,11 +1,13 @@
 import {Router} from 'express'
-import { createAccount, editAccountData, getAccountData, getAccounts, getAccountAdmin, editAccountAdmin, deleteAccount } from '../controllers/shopLogin.controllers.js'
+import { createAccount, editAccountData, getAccountData, getAccounts, getAccountAdmin, editAccountAdmin, deleteAccount, getAccountDataPassword } from '../controllers/shopLogin.controllers.js'
 
 const router = Router()
 
 router.post('/shop-login', createAccount)
 
 router.get('/shop-login', getAccountData)
+
+router.get('/shop-login-password/:id', getAccountDataPassword)
 
 router.put('/shop-login', editAccountData)
 

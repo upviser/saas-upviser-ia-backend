@@ -10,14 +10,15 @@ import Domain from '../models/Domain.js'
 
 export const createSell = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const {email, region, city, firstName, lastName, address, details, phone, coupon, cart, shipping, state, pay, total, fbp, fbc, shippingMethod, shippingState, subscription} = req.body
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
         const cuponUpper = coupon?.toUpperCase()
-        const sells = await Sell.countDocuments()
-        const storeData = await StoreData.findOne().lean()
+        const sells = await Sell.countDocuments({ tenantId })
+        const storeData = await StoreData.findOne({ tenantId }).lean()
         const buyOrder = `${storeData.name.toUpperCase()}-${1001 + Number(sells)}`
-        const newSell = new Sell({email, region, city, firstName: firstName[0].toUpperCase() + firstName.substring(1), lastName: lastName[0].toUpperCase() + lastName.substring(1), address, details, phone: phone, coupon: cuponUpper, cart, shipping, state, pay, total, shippingMethod, shippingState, buyOrder, subscription, shippingLabel: req.body.shippingLabel, number: req.body.number})
+        const newSell = new Sell({tenantId, email, region, city, firstName: firstName[0].toUpperCase() + firstName.substring(1), lastName: lastName[0].toUpperCase() + lastName.substring(1), address, details, phone: phone, coupon: cuponUpper, cart, shipping, state, pay, total, shippingMethod, shippingState, buyOrder, subscription, shippingLabel: req.body.shippingLabel, number: req.body.number})
         const sellSave = await newSell.save()
         if (state === 'Pago realizado') {
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
@@ -64,14 +65,14 @@ export const createSell = async (req, res) => {
                         }
                     )
             }
-            const storeData = await StoreData.findOne().lean()
-            const style = await Style.findOne().lean()
-            sendEmailBuyBrevo({ sell: req.body, storeData: storeData, style: style })
+            const storeData = await StoreData.findOne({ tenantId }).lean()
+            const style = await Style.findOne({ tenantId }).lean()
+            sendEmailBuyBrevo({ sell: req.body, storeData: storeData, style: style, tenantId })
             const date = new Date()
             date.setDate(date.getDate() + 10)
             const cronExpression = formatDateToCron(date)
             cron.schedule(cronExpression, () => {
-                sendEmailBrevo({ subscripbers: [{ firstName: firstName, email: email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${sellSave._id}` }, storeData: storeData, style: style });
+                sendEmailBrevo({ tenantId, subscripbers: [{ firstName: firstName, email: email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${sellSave._id}` }, storeData: storeData, style: style });
             });
         } else if (state === 'Pedido realizado') {
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
@@ -118,8 +119,8 @@ export const createSell = async (req, res) => {
                         }
                     )
             }
-            const storeData = await StoreData.findOne().lean()
-            const style = await Style.findOne().lean()
+            const storeData = await StoreData.findOne({ tenantId }).lean()
+            const style = await Style.findOne({ tenantId }).lean()
             sendEmailBuyBrevo({ sell: req.body, storeData: storeData, style: style })
         }
         res.json(sellSave)
@@ -157,7 +158,8 @@ export const createSell = async (req, res) => {
 
 export const getSells = async (req, res) => {
     try {
-        const sells = await Sell.find().sort({ createdAt: -1 })
+        const tenantId = req.headers['x-tenant-id']
+        const sells = await Sell.find({ tenantId }).sort({ createdAt: -1 })
         return res.send(sells)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -166,6 +168,7 @@ export const getSells = async (req, res) => {
 
 export const getSell = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const sell = await Sell.findById(req.params.id)
         if (!sell) return res.sendStatus(404)
         return res.json(sell)
@@ -176,6 +179,7 @@ export const getSell = async (req, res) => {
 
 export const getSellEmail = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const sell = await Sell.findOne({ email: req.params.email }).sort({ createdAt: -1 }).limit(1)
         return res.json(sell)
     } catch (error) {
@@ -185,6 +189,7 @@ export const getSellEmail = async (req, res) => {
 
 export const updateSell = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { sell, fbp, fbc } = req.body
         const updateSell = await Sell.findByIdAndUpdate(req.params.id, {...sell, shippingCode: shippingCode}, {new: true})
         if (sell.shippingState === 'Productos empaquetados') {
@@ -194,8 +199,8 @@ export const updateSell = async (req, res) => {
             await sendEmailBrevo({ subscribers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: 'Tus productos ya se encuentran en camino', title: 'Tu compra ya esta en camino a tu hogar', paragraph: 'Hola, queriamos comentarte que ya hemos realizado el envio de los productos de tu compra.' } })
         }
         if (sell.state === 'Pago realizado') {
-            const integrations = await Integrations.findOne().lean()
-            const domain = await Domain.findOne().lean()
+            const integrations = await Integrations.findOne({ tenantId }).lean()
+            const domain = await Domain.findOne({ tenantId }).lean()
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const CustomData = bizSdk.CustomData
                 const EventRequest = bizSdk.EventRequest
@@ -238,14 +243,14 @@ export const updateSell = async (req, res) => {
                         }
                     )
             }
-            const storeData = await StoreData.findOne().lean()
-            const style = await Style.findOne().lean()
+            const storeData = await StoreData.findOne({ tenantId }).lean()
+            const style = await Style.findOne({ tenantId }).lean()
             sendEmailBuyBrevo({ sell: sell, storeData: storeData, style: style })
             const date = new Date()
             date.setDate(date.getDate() + 10)
             const cronExpression = formatDateToCron(date)
             cron.schedule(cronExpression, () => {
-                sendEmailBrevo({ subscripbers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${sell._id}` }, storeData: storeData, style: style });
+                sendEmailBrevo({ tenantId, subscripbers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${sell._id}` }, storeData: storeData, style: style });
             });
         }
         return res.send(updateSell)
@@ -256,6 +261,7 @@ export const updateSell = async (req, res) => {
 
 export const updatedSell = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const updatedSell = await Sell.findByIdAndUpdate(req.params.id, req.body, { new: true })
         if (req.body.state === 'Pago no realizado') {
             updatedSell.cart.map(async product => {
@@ -281,8 +287,8 @@ export const updatedSell = async (req, res) => {
                 }
             })
         } else if (req.body.state === 'Pago realizado') {
-            const integrations = await Integrations.findOne().lean()
-            const domain = await Domain.findOne().lean()
+            const integrations = await Integrations.findOne({ tenantId }).lean()
+            const domain = await Domain.findOne({ tenantId }).lean()
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const CustomData = bizSdk.CustomData
                 const EventRequest = bizSdk.EventRequest
@@ -325,14 +331,14 @@ export const updatedSell = async (req, res) => {
                         }
                     )
             }
-            const storeData = await StoreData.findOne().lean()
-            const style = await Style.findOne().lean()
+            const storeData = await StoreData.findOne({ tenantId }).lean()
+            const style = await Style.findOne({ tenantId }).lean()
             sendEmailBuyBrevo({ sell: updatedSell, storeData: storeData, style: style })
             const date = new Date()
             date.setDate(date.getDate() + 10)
             const cronExpression = formatDateToCron(date)
             cron.schedule(cronExpression, () => {
-                sendEmailBrevo({ subscripbers: [{ firstName: updatedSell.firstName, email: updatedSell.email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${updatedSell._id}` }, storeData: storeData, style: style });
+                sendEmailBrevo({ tenantId, subscripbers: [{ firstName: updatedSell.firstName, email: updatedSell.email }], emailData: { affair: `{firstName} que te parecieron los productos que compraste en ${storeData.name}`, title: 'Deja tu comentario sobre que te parecieron los productos de tu compra', paragraph: 'Hola {firstName}, nos comunicamos contigo ya que nos gustaria saber que te parecieron los productos que compraste, si tocas el boton de abajo se te redirigira a una pagina en donde podras evaluar cada uno de los productos que compraste.', buttonText: 'Evaluar productos', url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/evaluar-productos?sell=${updatedSell._id}` }, storeData: storeData, style: style });
             });
         }
         return res.send(updatedSell)
@@ -343,6 +349,7 @@ export const updatedSell = async (req, res) => {
 
 export const getSellByEmail = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const sells = await Sell.find({email: req.params.id}).sort({ createdAt: -1 })
 
         if (!sells) {

@@ -14,7 +14,8 @@ import ChatTag from '../models/ChatTag.js'
 
 export const responseMessage = async (req, res) => {
     try {
-        const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
+        const tenantId = req.headers['x-tenant-id']
+        const shopLogin = await ShopLogin.findOne({ tenantId, type: 'Administrador' })
         const message = req.body.message
         const senderId = req.body.senderId
         const messages = await ChatMessage.find({ senderId: senderId }).select('-senderId -_id -adminView -userView -agent').sort({ createdAt: -1 }).limit(2).lean();
@@ -24,9 +25,9 @@ export const responseMessage = async (req, res) => {
             await ShopLogin.findByIdAndUpdate(shopLogin._id, { conversationsAIAdd: shopLogin.conversationsAIAdd + 1 })
         }
         if (!req.body.agent || shopLogin.conversationsAI < 1) {
-            const newMessage = new ChatMessage({senderId: senderId, message: message, agent: false, adminView: false, userView: true, tag: messages[0].tag})
+            const newMessage = new ChatMessage({tenantId, senderId: senderId, message: message, agent: false, adminView: false, userView: true, tag: messages[0].tag})
             await newMessage.save()
-            const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje del chat', url: '/mensajes', view: false })
+            const notification = new Notification({ tenantId, title: 'Nuevo mensaje', description: 'Nuevo mensaje del chat', url: '/mensajes', view: false })
             await notification.save()
             io.emit('newNotification')
             return res.send(newMessage)
@@ -59,7 +60,7 @@ export const responseMessage = async (req, res) => {
             });
             let information = ''
             if (JSON.stringify(type.output_parsed).toLowerCase().includes('productos') || JSON.stringify(type.output_parsed).toLowerCase().includes('servicios')) {
-                products = await Product.find().lean()
+                products = await Product.find({ tenantId }).lean()
                 const nameCategories = products.map(product => {
                     return {
                         name: product.name,
@@ -100,7 +101,7 @@ export const responseMessage = async (req, res) => {
                         category: product.category
                     }
                 })
-                const services = await Service.find().lean();
+                const services = await Service.find({ tenantId }).lean();
                 const nameDescriptions = services.map(service => {
                     return {
                         name: service.name,
@@ -145,23 +146,23 @@ export const responseMessage = async (req, res) => {
                 information = `${information}. ${simplifiedProducts.length ? `Información de productos: ${JSON.stringify(simplifiedProducts).replaceAll('"', '')}. Si el usuario esta buscando un producto o le quieres recomendar un producto pon <a href="/tienda/(slug de la categoria)/(slug del producto)">(nombre del producto)</a> para que pueda ver fotos y más detalles del producto, y siempre muestra todas las variantes del producto.` : ''} ${simplifiedServices.length ? `Información de servicios: ${JSON.stringify(simplifiedServices).replaceAll('"', '')}. Si el usuario esta interesado en el servicio decir como seria el primer paso que esta en firstStep.type y mostrar el link de la página <a href="/(firstStep.slug)">(nombre del servicio)</a>.` : ''}`
             }
             if (JSON.stringify(type.output_parsed).toLowerCase().includes('envios')) {
-                const politics = await Politics.find().lean()
+                const politics = await Politics.find({ tenantId }).lean()
                 information = `${information}. ${JSON.stringify(politics[0].shipping).replaceAll('"', '')}`
             }
             if (JSON.stringify(type.output_parsed).toLowerCase().includes('horarios') || JSON.stringify(type.output_parsed).toLowerCase().includes('ubicación') || JSON.stringify(type.output_parsed).toLowerCase().includes('saludo')) {
-                const storeData = await StoreData.find().lean()
+                const storeData = await StoreData.find({ tenantId }).lean()
                 information = `${information}. ${JSON.stringify(storeData[0]).replaceAll('"', '')}`
             }
             if (JSON.stringify(type.output_parsed).toLowerCase().includes('garantia') || JSON.stringify(type.output_parsed).toLowerCase().includes('devoluciones')) {
-                const politics = await Politics.find().lean()
+                const politics = await Politics.find({ tenantId }).lean()
                 information = `${information}. ${JSON.stringify(politics[0].devolutions).replaceAll('"', '')}`
             }
             if (JSON.stringify(type.output_parsed).toLowerCase().includes('metodos de pago')) {
-                const politics = await Politics.find().lean()
+                const politics = await Politics.find({ tenantId }).lean()
                 information = `${information}. ${JSON.stringify(politics[0].pay).replaceAll('"', '')}`
             }
             if (JSON.stringify(type.output_parsed).toLowerCase().includes('agendamientos')) {
-                const calls = await Call.find().select('-_id -labels -buttonText -tags -action -message').lean()
+                const calls = await Call.find({ tenantId }).select('-_id -labels -buttonText -tags -action -message').lean()
                 const nameDescriptions = calls.map(call => {
                     return {
                         nameMeeting: call.nameMeeting,
@@ -275,7 +276,7 @@ Devuelve 2 cosas en JSON:
                         dimentions: product.dimentions || ''
                     };
                 }).filter(Boolean);
-                const newMessage = new ChatMessage({senderId: senderId, message: message, response: act.output_parsed.message, agent: false, adminView: false, userView: true, tag: 'Productos'})
+                const newMessage = new ChatMessage({tenantId, senderId: senderId, message: message, response: act.output_parsed.message, agent: false, adminView: false, userView: true, tag: 'Productos'})
                 const newMessageSave = await newMessage.save()
                 return res.send({ ...newMessageSave.toObject(), cart: enrichedCart })
             }
@@ -295,9 +296,9 @@ Devuelve 2 cosas en JSON:
                     presence_penalty: 0,
                     store: false
                 });
-                const newMessage = new ChatMessage({senderId: senderId, message: message, response: response.choices[0].message.content, agent: false, adminView: false, userView: true, tag: 'Transferido'})
+                const newMessage = new ChatMessage({tenantId, senderId: senderId, message: message, response: response.choices[0].message.content, agent: false, adminView: false, userView: true, tag: 'Transferido'})
                 await newMessage.save()
-                const notification = new Notification({ title: 'Nuevo mensaje', description: 'Nuevo mensaje del chat', url: '/mensajes', view: false })
+                const notification = new Notification({ tenantId, title: 'Nuevo mensaje', description: 'Nuevo mensaje del chat', url: '/mensajes', view: false })
                 await notification.save()
                 io.emit('newNotification')
                 return res.send(newMessage)
@@ -318,11 +319,11 @@ Devuelve 2 cosas en JSON:
                     presence_penalty: 0,
                     store: false
                 });
-                const newMessage = new ChatMessage({senderId: senderId, message: message, response: response.choices[0].message.content, agent: true, adminView: false, userView: true, tag: 'Agente IA'})
+                const newMessage = new ChatMessage({tenantId, senderId: senderId, message: message, response: response.choices[0].message.content, agent: true, adminView: false, userView: true, tag: 'Agente IA'})
                 await newMessage.save()
                 return res.send(newMessage)
             } else {
-                const newMessage = new ChatMessage({senderId: senderId, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: false, adminView: false, userView: true, tag: 'Tranferido'})
+                const newMessage = new ChatMessage({tenantId, senderId: senderId, message: message, response: 'Lo siento, no tengo la información necesaria para responder tu pregunta, te estoy transfiriendo con alguien de soporte', agent: false, adminView: false, userView: true, tag: 'Tranferido'})
                 await newMessage.save()
                 return res.send(newMessage)
             }
@@ -334,7 +335,11 @@ Devuelve 2 cosas en JSON:
 
 export const getIds = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         ChatMessage.aggregate([
+            {
+                $match: { tenantId }
+            },
             {
                 $sort: { senderId: 1, _id: -1 }
             },
@@ -374,6 +379,7 @@ export const getIds = async (req, res) => {
 
 export const getMessages = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await ChatMessage.find({senderId: req.params.id}).lean()
         return res.send(messages)
     } catch (error) {
@@ -383,7 +389,8 @@ export const getMessages = async (req, res) => {
 
 export const createMessage = async (req, res) => {
     try {
-        const newMessage = new ChatMessage(req.body)
+        const tenantId = req.headers['x-tenant-id']
+        const newMessage = new ChatMessage({...req.body, tenantId})
         await newMessage.save()
         return res.send(newMessage)
     } catch (error) {
@@ -393,6 +400,7 @@ export const createMessage = async (req, res) => {
 
 export const viewAdminMessage = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await ChatMessage.find({senderId: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -406,6 +414,7 @@ export const viewAdminMessage = async (req, res) => {
 
 export const viewUserMessage = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await ChatMessage.find({senderId: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -419,6 +428,7 @@ export const viewUserMessage = async (req, res) => {
 
 export const changeTag = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await ChatMessage.find({senderId: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -432,7 +442,8 @@ export const changeTag = async (req, res) => {
 
 export const getChatTags = async (req, res) => {
     try {
-        const tags = await ChatTag.find().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const tags = await ChatTag.find({ tenantId }).lean()
         return res.json(tags)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -441,7 +452,8 @@ export const getChatTags = async (req, res) => {
 
 export const createTag = async (req, res) => {
     try {
-        const newTag = new ChatTag(req.body)
+        const tenantId = req.headers['x-tenant-id']
+        const newTag = new ChatTag({...req.body, tenantId})
         const newTagSave = await newTag.save()
         return res.json(newTagSave)
     } catch (error) {

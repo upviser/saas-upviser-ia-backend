@@ -3,13 +3,14 @@ import mongoose from 'mongoose'
 
 export const createFunnel = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const funnel = await Funnel.findOne({ funnel: req.body.funnel })
         if (funnel) {   
-            const editFunnel = new Funnel(req.body)
+            const editFunnel = new Funnel({...req.body, tenantId})
             const editFunnelSave = await Funnel.findByIdAndUpdate(funnel._id, editFunnel, { new: true })
             return res.json(editFunnelSave)
         } else {
-            const newFunnel = new Funnel(req.body)
+            const newFunnel = new Funnel({...req.body, tenantId})
             const newFunnelSave = await newFunnel.save()
             return res.json(newFunnelSave)
         }
@@ -20,7 +21,8 @@ export const createFunnel = async (req, res) => {
 
 export const getFunnels = async (req, res) => {
     try {
-        const funnels = await Funnel.find()
+        const tenantId = req.headers['x-tenant-id']
+        const funnels = await Funnel.find({ tenantId }).lean()
         return res.json(funnels)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -29,6 +31,7 @@ export const getFunnels = async (req, res) => {
 
 export const getFunnel = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const funnel = await Funnel.findById(req.params.id)
         return res.json(funnel)
     } catch (error) {
@@ -38,7 +41,8 @@ export const getFunnel = async (req, res) => {
 
 export const getFunnelSlug = async (req, res) => {
     try {
-        const funnel = await Funnel.findOne({ slug: req.params.slug })
+        const tenantId = req.headers['x-tenant-id']
+        const funnel = await Funnel.findOne({ tenantId, slug: req.params.slug })
         return res.json(funnel)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -47,7 +51,8 @@ export const getFunnelSlug = async (req, res) => {
 
 export const getStepSlug = async (req, res) => {
     try {
-        const funnel = await Funnel.findOne({ slug: req.params.funnel })
+        const tenantId = req.headers['x-tenant-id']
+        const funnel = await Funnel.findOne({ tenantId, slug: req.params.funnel })
         const step = funnel.steps.find(step => step.slug === req.params.step)
         return res.json(step)
     } catch (error) {
@@ -57,6 +62,7 @@ export const getStepSlug = async (req, res) => {
 
 export const editFunnel = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const edit = await Funnel.findByIdAndUpdate(req.params.id, req.body, { new: true })
         return res.json(edit)
     } catch (error) {
@@ -66,6 +72,7 @@ export const editFunnel = async (req, res) => {
 
 export const deleteFunnel = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const funnelDelete = await Funnel.findByIdAndDelete(req.params.id)
         return res.json(funnelDelete)
     } catch (error) {
@@ -74,6 +81,7 @@ export const deleteFunnel = async (req, res) => {
 }
 
 export const updateAllFunnels = async (req, res) => {
+    const tenantId = req.headers['x-tenant-id']
   const funnels = req.body;
 
   const session = await mongoose.startSession();
@@ -107,6 +115,7 @@ export const updateAllFunnels = async (req, res) => {
 
 export const updateStep = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { _id, ...updatedData } = req.body;
 
         // Encuentra el documento Funnel que contiene el paso a actualizar
@@ -134,7 +143,8 @@ export const updateStep = async (req, res) => {
 
 export const getFunnelStep = async (req, res) => {
     try {
-        const funnels = await Funnel.find()
+        const tenantId = req.headers['x-tenant-id']
+        const funnels = await Funnel.find({ tenantId }).lean()
         const funnel = funnels.find(funnel => req.params.id.includes(funnel.slug))
         const step = funnel.steps.find(step => req.params.id.includes(step.slug))
         return res.json({ funnel, step })
@@ -145,7 +155,8 @@ export const getFunnelStep = async (req, res) => {
 
 export const getFunnelByStep = async (req, res) => {
     try {
-        const funnels = await Funnel.find()
+        const tenantId = req.headers['x-tenant-id']
+        const funnels = await Funnel.find({ tenantId }).lean()
         const funnel = funnels.find(funnel => 
             funnel.steps.some(step => step.slug === req.params.id)
         );
@@ -160,7 +171,8 @@ export const getFunnelByStep = async (req, res) => {
 
 export const getFunnelByName = async (req, res) => {
     try {
-        const funnel = await Funnel.findOne({ funnel: req.params.funnel })
+        const tenantId = req.headers['x-tenant-id']
+        const funnel = await Funnel.findOne({ tenantId, funnel: req.params.funnel }).lean()
         return res.json(funnel)
     } catch (error) {
         return res.status(500).json({ message: error.message });

@@ -9,12 +9,13 @@ import ChatTag from '../models/ChatTag.js'
 
 export const createDesign = async (req, res) => {
     try {
-        const design = await Design.findOne()
+        const tenantId = req.headers['x-tenant-id']
+        const design = await Design.findOne({ tenantId }).lean()
         if (design) {
             const designUpdate = await Design.findByIdAndUpdate(design._id, req.body, { new: true })
             return res.send(designUpdate)
         } else {
-            const newDesign = new Design(req.body)
+            const newDesign = new Design({...req.body, tenantId})
             const newDesignSave = await newDesign.save()
             return res.send(newDesignSave)
         }
@@ -25,7 +26,8 @@ export const createDesign = async (req, res) => {
 
 export const getDesign = async (req, res) => {
     try {
-        const design = await Design.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const design = await Design.findOne({ tenantId }).lean()
         if (design === null) {
             return res.send([])
         }
@@ -37,6 +39,7 @@ export const getDesign = async (req, res) => {
 
 export const updateDesign = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const updateDesign = await Design.findByIdAndUpdate(req.params.id, req.body, { new: true })
         return res.json(updateDesign)
     } catch (error) {
@@ -46,6 +49,7 @@ export const updateDesign = async (req, res) => {
 
 export const editPage = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { _id, updatedAt, createdAt, ...updatedData } = req.body;
 
         // Encuentra la página que necesitas actualizar
@@ -73,10 +77,11 @@ export const editPage = async (req, res) => {
 
 export const getPagesAndFunnels = async (req, res) => {
     try {
-        const design = await Design.findOne();
+        const tenantId = req.headers['x-tenant-id']
+        const design = await Design.findOne({ tenantId }).lean();
         const pages = design.pages.filter(page => page.slug !== '').filter(page => page.slug !== 'contacto').filter(page => page.slug !== 'tienda');
-        const funnels = await Funnel.find();
-        const services = await Service.find()
+        const funnels = await Funnel.find({ tenantId }).lean();
+        const services = await Service.find({ tenantId }).lean()
 
         // Aplanar los steps de los funnels y unirlos con pages
         const allSteps = funnels.map(funnel => funnel.steps.filter(step => step.slug !== '')).flat();
@@ -91,17 +96,18 @@ export const getPagesAndFunnels = async (req, res) => {
 
 export const getPagesFunnels = async (req, res) => {
     try {
-        const design = await Design.find()
+        const tenantId = req.headers['x-tenant-id']
+        const design = await Design.find({ tenantId }).lean()
         if (design[0].pages.find(page => page.slug === req.params.id)) {
             const page = design[0].pages.find(page => page.slug === req.params.id)
             return res.json(page)
         } else {
-            const funnels = await Funnel.find()
+            const funnels = await Funnel.find({ tenantId }).lean()
             if (funnels.find(funnel => funnel.steps.find(step => req.params.id === step.slug))) {
                 const step = funnels.find(funnel => funnel.steps.find(step => req.params.id === step.slug)).steps.find(step => step.slug === req.params.id)
                 return res.json(step)
             } else {
-                const services = await Service.find()
+                const services = await Service.find({ tenantId }).lean()
                 if (services.map(service => service.steps.find(step => req.params.id === step.slug))) {
                     const step = services.find(service => service.steps.find(step => req.params.id === step.slug)).steps.find(step => step.slug === req.params.id)
                     return res.json(step)
@@ -115,7 +121,9 @@ export const getPagesFunnels = async (req, res) => {
 
 export const createDefaultPages = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const newDesign = new Design({
+            tenantId,
           header: {
             topStrip: '',
             logo: 'Logo'
@@ -165,33 +173,33 @@ export const createDefaultPages = async (req, res) => {
           categoryPage: [{ design: [{ content: 'Bloque 6' }, { content: 'Categorias 2' }, { content: 'Productos' }, { content: 'Suscripción' }] }]
         })
         const newDesignSave = await newDesign.save()
-        const newTag = new ClientTag({ tag: 'suscriptores' })
+        const newTag = new ClientTag({ tenantId, tag: 'suscriptores' })
         await newTag.save()
-        const newTag2 = new ClientTag({ tag: 'clientes' })
+        const newTag2 = new ClientTag({ tenantId, tag: 'clientes' })
         await newTag2.save()
-        const newTag3 = new ClientTag({ tag: 'formulario-contacto' })
+        const newTag3 = new ClientTag({ tenantId, tag: 'formulario-contacto' })
         await newTag3.save()
-        const newTag4 = new ClientTag({ tag: 'desuscrito' })
+        const newTag4 = new ClientTag({ tenantId, tag: 'desuscrito' })
         await newTag4.save()
-        const newDataFirstName = new ClientData({ name: 'Nombre', data: 'firstName' })
+        const newDataFirstName = new ClientData({ tenantId, name: 'Nombre', data: 'firstName' })
         await newDataFirstName.save()
-        const newDataLastName = new ClientData({ name: 'Apellido', data: 'lastName' })
+        const newDataLastName = new ClientData({ tenantId, name: 'Apellido', data: 'lastName' })
         await newDataLastName.save()
-        const newDataEmail = new ClientData({ name: 'Email', data: 'email' })
+        const newDataEmail = new ClientData({ tenantId, name: 'Email', data: 'email' })
         await newDataEmail.save()
-        const newDataPhone = new ClientData({ name: 'Teléfono', data: 'phone' })
+        const newDataPhone = new ClientData({ tenantId, name: 'Teléfono', data: 'phone' })
         await newDataPhone.save()
-        const newStyle = new Style({ design: 'Ninguno', form: 'Cuadradas', primary: '#2167e5', button: '#ffffff' })
+        const newStyle = new Style({ tenantId, design: 'Ninguno', form: 'Cuadradas', primary: '#2167e5', button: '#ffffff' })
         await newStyle.save()
-        const newDomain = new Domain({ domain: 'upviser.cl', name: process.env.NAME_STORE, email: `${process.env.NAME_STORE.toLowerCase()}` })
+        const newDomain = new Domain({ tenantId, domain: 'upviser.cl', name: process.env.NAME_STORE, email: `${process.env.NAME_STORE.toLowerCase()}` })
         await newDomain.save()
-        const newChatTag1 = new ChatTag({ tag: 'Compra', color: '#00CE1B' })
+        const newChatTag1 = new ChatTag({ tenantId, tag: 'Compra', color: '#00CE1B' })
         await newChatTag1.save()
-        const newChatTag2 = new ChatTag({ tag: 'Agente IA', color: '#003CFF' })
+        const newChatTag2 = new ChatTag({ tenantId, tag: 'Agente IA', color: '#003CFF' })
         await newChatTag2.save()
-        const newChatTag3 = new ChatTag({ tag: 'Productos', color: '#8000FF' })
+        const newChatTag3 = new ChatTag({ tenantId, tag: 'Productos', color: '#8000FF' })
         await newChatTag3.save()
-        const newChatTag4 = new ChatTag({ tag: 'Transferido', color: '#FF6200' })
+        const newChatTag4 = new ChatTag({ tenantId, tag: 'Transferido', color: '#FF6200' })
         await newChatTag4.save()
         return res.json(newDesignSave)
     } catch (error) {
@@ -201,7 +209,8 @@ export const createDefaultPages = async (req, res) => {
 
 export const createStyle = async (req, res) => {
     try {
-        const style = await Style.findOne()
+        const tenantId = req.headers['x-tenant-id']
+        const style = await Style.findOne({ tenantId }).lean()
         if (style) {
             const updateStyle = await Style.findByIdAndUpdate(style._id, req.body, { new: true })
             return res.json(updateStyle)
@@ -216,8 +225,9 @@ export const createStyle = async (req, res) => {
 }
 
 export const getStyle = async (req, res) => {
+    const tenantId = req.headers['x-tenant-id']
     try {
-        const style = await Style.findOne()
+        const style = await Style.findOne({ tenantId }).lean()
         return res.json(style)
     } catch (error) {
         return res.status(500).json({message: error.message})

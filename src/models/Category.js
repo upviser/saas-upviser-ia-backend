@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const categorySchema = new mongoose.Schema({
+  tenantId: { type: String, required: true },
   category: { type: String, required: true },
   description: { type: String },
   slug: { type: String, required: true, unique: true },

@@ -2,7 +2,8 @@ import PromotionalCode from '../models/PromotionalCode.js'
 
 export const createPromotionalCode = async (req, res) => {
   try {
-    const newPromotionalCode = new PromotionalCode(req.body)
+    const tenantId = req.headers['x-tenant-id']
+    const newPromotionalCode = new PromotionalCode({...req.body, tenantId})
     await newPromotionalCode.save()
     return res.json(newPromotionalCode)
   } catch (error) {
@@ -12,7 +13,8 @@ export const createPromotionalCode = async (req, res) => {
 
 export const getPromotionalCodes = async (req, res) => {
   try {
-    const promotionalCodes = await PromotionalCode.find()
+    const tenantId = req.headers['x-tenant-id']
+    const promotionalCodes = await PromotionalCode.find({ tenantId })
     return res.json(promotionalCodes)
   } catch (error) {
     return res.status(500).json({message: error.message})
@@ -21,6 +23,7 @@ export const getPromotionalCodes = async (req, res) => {
 
 export const getPromotionalCodeBySlug = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const promotionalCode = await PromotionalCode.findOne({slug: req.params.id}).lean()
 
     if (!promotionalCode) {
@@ -35,6 +38,7 @@ export const getPromotionalCodeBySlug = async (req, res) => {
 
 export const updatePromotionalCode = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const updatedCode = await PromotionalCode.findOneAndUpdate({slug: req.params.id}, req.body, {new: true})
     return res.send(updatedCode)
   } catch (error) {
@@ -44,6 +48,7 @@ export const updatePromotionalCode = async (req, res) => {
 
 export const deletePromotionalCode = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     await PromotionalCode.findByIdAndDelete(req.params.id)
     return res.sendStatus(204)
   } catch (error) {

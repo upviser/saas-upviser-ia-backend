@@ -12,6 +12,7 @@ import bcrypt from 'bcryptjs'
 
 export const createClient = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const client = await Client.findOne({ email: req.body.email }).lean();
     if (client) {
       const clientTagsSet = new Set(client.tags || []);
@@ -97,14 +98,15 @@ export const createClient = async (req, res) => {
               (email.condition.length === 0 && !client.tags.includes('desuscrito')) ||
               (email.condition.some(tag => !client.tags.includes(tag) || !client.tags.includes('desuscrito')))
             ) {
-              const clientData = await ClientData.find();
-              const storeData = await StoreData.find();
-              const style = await Style.findOne()
-              sendEmailBrevo({ subscribers: [client], emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: automatization._id, style: style });
+              const clientData = await ClientData.find({ tenantId }).lean();
+              const storeData = await StoreData.find({ tenantId }).lean();
+              const style = await Style.findOne({ tenantId }).lean()
+              sendEmailBrevo({ tenantId, subscribers: [client], emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: automatization._id, style: style });
             }
           } else {
             const dateCron = formatDateToCron(new Date(email.date));
             const newTask = new Task({
+              tenantId,
               dateCron: dateCron,
               subscriber: client.email,
               emailData: email,
@@ -127,10 +129,10 @@ export const createClient = async (req, res) => {
                   funnelOrServiceCondition = clientUpdate.services.some(service => service.step === automatization.startValue);
                 }
                 if (tagsCondition && funnelOrServiceCondition) {
-                  const clientData = await ClientData.find();
-                  const storeData = await StoreData.find();
-                  const style = await Style.findOne()
-                  sendEmailBrevo({ subscribers: [clientUpdate], emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: automatization._id, style: style });
+                  const clientData = await ClientData.find({ tenantId }).lean();
+                  const storeData = await StoreData.find({ tenantId }).lean();
+                  const style = await Style.findOne({ tenantId }).lean()
+                  sendEmailBrevo({ tenantId, subscribers: [clientUpdate], emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: automatization._id, style: style });
                 }
               }
             });
@@ -138,9 +140,9 @@ export const createClient = async (req, res) => {
         });
       });
     } else {
-      const newClient = new Client(req.body);
+      const newClient = new Client({...req.body, tenantId});
       const newClientSave = await newClient.save();
-      const automatizations = await Automatization.find().lean();
+      const automatizations = await Automatization.find({ tenantId }).lean();
 
       const automatizationsClient = automatizations.filter(automatization => {
         switch (automatization.startType) {
@@ -190,11 +192,12 @@ export const createClient = async (req, res) => {
               const clientData = await ClientData.find();
               const storeData = await StoreData.find();
               const style = await Style.findOne()
-              sendEmailBrevo({ subscribers: [newClientSave], emailData: email, storeData: storeData[0], clientData: clientData, automatizationId: automatization._id, style: style });
+              sendEmailBrevo({ tenantId, subscribers: [newClientSave], emailData: email, storeData: storeData[0], clientData: clientData, automatizationId: automatization._id, style: style });
             }
           } else {
             const dateCron = formatDateToCron(new Date(email.date));
             const newTask = new Task({
+              tenantId,
               dateCron: dateCron,
               subscriber: newClient.email,
               emailData: email,
@@ -215,10 +218,10 @@ export const createClient = async (req, res) => {
                   funnelOrServiceCondition = clientUpdate.services.some(service => service.step === automatization.startValue);
                 }
                 if (tagsCondition && funnelOrServiceCondition) {
-                  const clientData = await ClientData.find();
-                  const storeData = await StoreData.find();
-                  const style = await Style.findOne()
-                  sendEmailBrevo({ subscribers: [clientUpdate], emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: automatization._id, style: style });
+                  const clientData = await ClientData.find({ tenantId }).lean();
+                  const storeData = await StoreData.find({ tenantId }).lean();
+                  const style = await Style.findOne({ tenantId }).lean()
+                  sendEmailBrevo({ tenantId, subscribers: [clientUpdate], emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: automatization._id, style: style });
                 }
               }
             });
@@ -233,7 +236,8 @@ export const createClient = async (req, res) => {
 
 export const getClients = async (req, res) => {
   try {
-    const clients = await Client.find()
+    const tenantId = req.headers['x-tenant-id']
+    const clients = await Client.find({ tenantId }).lean()
 
     if (!clients) {
       return undefined
@@ -247,6 +251,7 @@ export const getClients = async (req, res) => {
 
 export const updateClient = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const updateClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true })
     return res.send(updateClient)
   } catch (error) {
@@ -256,6 +261,7 @@ export const updateClient = async (req, res) => {
 
 export const updateClientEmail = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const updateClient = await Client.findOneAndUpdate({ email: req.params.id }, req.body, { new: true })
     return res.send(updateClient)
   } catch (error) {
@@ -265,6 +271,7 @@ export const updateClientEmail = async (req, res) => {
 
 export const getClient = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const client = await Client.findById(req.params.id)
     if (!client) return res.json({meesage: 'Not Found'})
     return res.send(client)
@@ -275,6 +282,7 @@ export const getClient = async (req, res) => {
 
 export const getClientByEmail = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const client = await Client.findOne({ email: req.params.id }).lean()
     if (!client) return res.json({meesage: 'Not Found'})
     return res.send(client)
@@ -285,6 +293,7 @@ export const getClientByEmail = async (req, res) => {
 
 export const deleteClient = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     await Client.findByIdAndDelete(req.params.id)
     return res.sendStatus(204)
   } catch (error) {
@@ -294,6 +303,7 @@ export const deleteClient = async (req, res) => {
 
 export const emailProduct = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const client = await Client.findOne({ email: req.params.email }).lean()
     if (client) {
       const productsClient = [...client.products]
@@ -311,6 +321,7 @@ export const emailProduct = async (req, res) => {
 
 export const createAccount = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const { firstName, lastName, email, password } = req.body
     const emailLower = email.toLowerCase()
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -319,7 +330,7 @@ export const createAccount = async (req, res) => {
     const user = await Account.findOne({ email: emailLower })
     if (user) return res.send({ message: 'El email ya esta registrado' })
     const hashedPassword = await bcrypt.hash(password, 12)
-    const newAccount = new Account({ firstName, lastName, email: emailLower, password: hashedPassword })
+    const newAccount = new Account({ tenantId, firstName, lastName, email: emailLower, password: hashedPassword })
     const accountSave = await newAccount.save()
     return res.send({ firstName: accountSave.firstName, lastName: accountSave.lastName, email: accountSave.email, _id: accountSave._id })
   } catch (error) {
@@ -329,6 +340,7 @@ export const createAccount = async (req, res) => {
 
 export const getAccountData = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const accountData = await Account.findById(req.params.id).lean()
     if (!accountData) return res.sendStatus(404)
     return res.send(accountData)
@@ -339,6 +351,7 @@ export const getAccountData = async (req, res) => {
 
 export const editAccountData = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const editAccountData = await Account.findByIdAndUpdate(req.params.id, req.body, { new: true })
     return res.send(editAccountData)
   } catch (error) {

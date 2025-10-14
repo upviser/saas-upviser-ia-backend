@@ -15,6 +15,7 @@ const pageSchema = new mongoose.Schema({
 })
 
 const DesignSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     header: {
         topStrip: { type: String },
         bgColor: { type: String },

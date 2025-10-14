@@ -5,7 +5,11 @@ import Integration from '../models/Integrations.js'
 
 export const getMessengerIds = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         MessengerMessage.aggregate([
+            {
+                $match: { tenantId }
+            },
             {
                 $sort: { messengerId: 1, _id: -1 }
             },
@@ -45,6 +49,7 @@ export const getMessengerIds = async (req, res) => {
 
 export const getMessagesMessenger = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await MessengerMessage.find({messengerId: req.params.id}).lean()
         res.send(messages)
     } catch (error) {
@@ -54,7 +59,8 @@ export const getMessagesMessenger = async (req, res) => {
 
 export const createMessage = async (req, res) => {
     try {
-        const integration = await Integration.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integration = await Integration.findOne({ tenantId }).lean()
         if (integration.messengerToken && integration.messengerToken !== '') {
             await axios.post(`https://graph.facebook.com/v21.0/${integration.idPage}/messages?access_token=${integration.messengerToken}`, {
                 "recipient": {
@@ -70,7 +76,7 @@ export const createMessage = async (req, res) => {
                 }
             })
             const ultMessage = await MessengerMessage.findOne({ messengerId: req.body.messengerId }).sort({ createdAt: -1 })
-            const newMessage = new MessengerMessage({messengerId: req.body.messengerId, response: req.body.response, agent: req.body.agent, view: req.body.view, tag: ultMessage.tag})
+            const newMessage = new MessengerMessage({tenantId, messengerId: req.body.messengerId, response: req.body.response, agent: req.body.agent, view: req.body.view, tag: ultMessage.tag})
             await newMessage.save()
             return res.sendStatus(200)
         } else {
@@ -83,6 +89,7 @@ export const createMessage = async (req, res) => {
 
 export const viewMessage = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await MessengerMessage.find({messengerId: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -96,6 +103,7 @@ export const viewMessage = async (req, res) => {
 
 export const changeTag = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await MessengerMessage.find({messengerId: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -108,6 +116,7 @@ export const changeTag = async (req, res) => {
 }
 
 export const MessengerToken = async (req, res) => {
+    const tenantId = req.headers['x-tenant-id']
   const { userToken } = req.body;
   if (!userToken) return res.status(400).json({ error: 'No se recibió token.' });
 
@@ -141,7 +150,7 @@ export const MessengerToken = async (req, res) => {
     });
 
     // 4. Guardar en BD
-    const integrations = await Integration.findOne().lean();
+    const integrations = await Integration.findOne({ tenantId }).lean();
     if (integrations) {
         await Integration.findByIdAndUpdate(integrations._id, {
             messengerToken: longLivedPageToken,
@@ -150,6 +159,7 @@ export const MessengerToken = async (req, res) => {
         });
     } else {
         const newIntegration = new Integration({
+            tenantId,
             messengerToken: longLivedPageToken,
             idPage: pageId,
             userAccessToken: longLivedUserToken
@@ -168,7 +178,8 @@ export const MessengerToken = async (req, res) => {
 
 export const DisconnectFacebook = async (req, res) => {
     try {
-        const integrations = await Integration.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integration.findOne({ tenantId }).lean()
         await axios.delete('https://graph.facebook.com/me/permissions', {
             params: { access_token: integrations.userAccessToken }
         });

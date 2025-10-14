@@ -5,9 +5,10 @@ import Domain from '../models/Domain.js'
 
 export const createViewContent = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const {product, fbp, fbc} = req.body
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
         const nuevaVisualizacion = new ViewContent({name: product.name, price: product.price, category: product.category.category})
         const newViewContent = await nuevaVisualizacion.save()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
@@ -64,7 +65,8 @@ export const createViewContent = async (req, res) => {
 
 export const getViewContent = async (req, res) => {
     try {
-        const visualizaciones = await ViewContent.find()
+        const tenantId = req.headers['x-tenant-id']
+        const visualizaciones = await ViewContent.find({ tenantId })
         res.send(visualizaciones)
     } catch (error) {
         return res.status(500).json({message: error.message})

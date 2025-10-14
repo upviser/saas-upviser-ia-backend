@@ -13,6 +13,7 @@ const AutomatizationsSchema = new mongoose.Schema({
 })
 
 const AutomatizationSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     startType: { type: String, required: true },
     startValue: { type: String },
     name: { type: String, required: true },

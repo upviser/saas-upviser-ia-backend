@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const WhatsappMessageSchema = mongoose.Schema({
+    tenantId: { type: String, required: true },
     phone: { type: Number, required: true },
     message: { type: String },
     response: { type: String },

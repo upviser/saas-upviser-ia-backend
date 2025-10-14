@@ -2,6 +2,7 @@ import { updateClientEmailStatusById } from '../utils/updateEmail.js'
 
 export const trackingOpen = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { id, email, automatizacionId } = req.query
         await updateClientEmailStatusById(email, id, 'unique_opened')
         return res.status(200).json({message: 'Email opened'})
@@ -12,6 +13,7 @@ export const trackingOpen = async (req, res) => {
 
 export const trackingClick = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { id, email, automatizacionId, url } = req.query
         await updateClientEmailStatusById(email, id, 'click')
         return res.redirect(url)

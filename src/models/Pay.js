@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const PaySchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     firstName: { type: String },
     lastName: { type: String },
     email: { type: String },

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const PageSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     page: { type: String },
     funnel: { type: String },
     step: { type: String },

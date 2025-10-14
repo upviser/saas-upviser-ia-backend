@@ -61,6 +61,7 @@ import webhookRoutes from './routes/webhook.routes.js'
 import notificationRoutes from './routes/notifications.routes.js'
 import cartRoutes from './routes/cart.routes.js'
 import DomainRoutes from './routes/domain.routes.js'
+import TenantRoutes from './routes/tenants.routes.js'
 
 connectDB()
 
@@ -82,26 +83,32 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.use(express.json({ limit: '10gb' }))
-app.use(express.urlencoded({limit: '10gb', extended: false}))
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({limit: '50mb', extended: false}))
 app.use(fileUpload({
     useTempFiles: true,
     tempFileDir: './upload',
-    limits: { fileSize: 10 * 1024 * 1024 * 1024 }
+    limits: { fileSize: 100 * 1024 * 1024 }
 }))
 
-await loadTasks()
+try {
+    await loadTasks()
+} catch (error) {
+    console.error('Error loading tasks:', error)
+}
 
 cron.schedule("0 0 1 * *", async () => {
-    const account = await ShopLogin.findOne({ type: 'Administrador' }).lean()
+    const accounts = await ShopLogin.find({ type: 'Administrador' }).lean()
 
-    if (account) {
-        await ShopLogin.findByIdAndUpdate(account._id, {
-            emails: account.plan === 'Esencial' ? 1500 : account.plan === 'Avanzado' ? 3500 : account.plan === 'Profesional' ? 6000 : 0,
-            textAI: account.plan === 'Esencial' ? 100 : account.plan === 'Avanzado' ? 200 : account.plan === 'Profesional' ? 400 : 0,
-            imagesAI: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
-            videosAI: account.plan === 'Avanzado' ? 15 : account.plan === 'Profesional' ? 30 : 0,
-            conversationsAI: account.plan === 'Esencial' ? 250 : account.plan === 'Avanzado' ? 600 : account.plan === 'Profesional' ? 1500 : 0
+    if (accounts.length) {
+        accounts.map(async account => {
+            await ShopLogin.findByIdAndUpdate(account._id, {
+                emails: account.plan === 'Esencial' ? 1500 : account.plan === 'Avanzado' ? 3500 : account.plan === 'Profesional' ? 6000 : 0,
+                textAI: account.plan === 'Esencial' ? 100 : account.plan === 'Avanzado' ? 200 : account.plan === 'Profesional' ? 400 : 0,
+                imagesAI: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
+                videosAI: account.plan === 'Avanzado' ? 15 : account.plan === 'Profesional' ? 30 : 0,
+                conversationsAI: account.plan === 'Esencial' ? 250 : account.plan === 'Avanzado' ? 600 : account.plan === 'Profesional' ? 1500 : 0
+            })
         })
     }
 })
@@ -159,6 +166,7 @@ app.use(webhookRoutes)
 app.use(notificationRoutes)
 app.use(cartRoutes)
 app.use(DomainRoutes)
+app.use(TenantRoutes)
 
 io.on('connection', async (socket) => {
     socket.on('message', async (message) => {

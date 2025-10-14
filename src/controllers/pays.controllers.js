@@ -10,8 +10,9 @@ import Domain from '../models/Domain.js'
 
 export const createPay = async (req, res) => {
     try {
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
         if (req.body.state === 'Pago iniciado' || req.body.state === 'Segundo pago iniciado') {
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
@@ -110,12 +111,12 @@ export const createPay = async (req, res) => {
                     }
                 )
             }
-            const storeData = await StoreData.findOne().lean()
-            const style = await Style.findOne().lean()
-            const services = await Service.find().lean()
-            sendEmailBuyBrevo({ pay: req.body.pay, storeData: storeData, style: style, services: services })
+            const storeData = await StoreData.findOne({ tenantId }).lean()
+            const style = await Style.findOne({ tenantId }).lean()
+            const services = await Service.find({ tenantId }).lean()
+            sendEmailBuyBrevo({ tenantId, pay: req.body.pay, storeData: storeData, style: style, services: services })
         }
-        const newPay = new Pay(req.body)
+        const newPay = new Pay({...req.body, tenantId})
         const newPaySave = await newPay.save()
         return res.json(newPaySave)
     } catch (error) {
@@ -125,7 +126,8 @@ export const createPay = async (req, res) => {
 
 export const getPays = async (req, res) => {
     try {
-        const pays = await Pay.find().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const pays = await Pay.find({ tenantId }).lean()
         return res.json(pays)
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -134,6 +136,7 @@ export const getPays = async (req, res) => {
 
 export const getPay = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const pay = await Pay.findById(req.params.id)
         return res.json(pay)
     } catch (error) {
@@ -143,6 +146,7 @@ export const getPay = async (req, res) => {
 
 export const getPayEmailService = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const [ email, serviceId ] = req.params.id.split('-')
         const client = await Client.findOne({ email: email })
         if (client.services.length && client.services.find(service => service.service === serviceId)) {
@@ -158,10 +162,11 @@ export const getPayEmailService = async (req, res) => {
 
 export const updatePay = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const payUpdate = await Pay.findByIdAndUpdate(req.params.id, req.body, { new: true })
         if (req.body.state === 'Pago realizado') {
-            const integrations = await Integrations.findOne().lean()
-            const domain = await Domain.findOne().lean()
+            const integrations = await Integrations.findOne({ tenantId }).lean()
+            const domain = await Domain.findOne({ tenantId }).lean()
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
@@ -210,10 +215,10 @@ export const updatePay = async (req, res) => {
                     }
                 )
             }
-            const storeData = await StoreData.findOne().lean()
-            const style = await Style.findOne().lean()
-            const services = await Service.find().lean()
-            sendEmailBuyBrevo({ pay: payUpdate, storeData: storeData, style: style, services: services })
+            const storeData = await StoreData.findOne({ tenantId }).lean()
+            const style = await Style.findOne({ tenantId }).lean()
+            const services = await Service.find({ tenantId }).lean()
+            sendEmailBuyBrevo({ tenantId, pay: payUpdate, storeData: storeData, style: style, services: services })
         }
         return res.json(payUpdate)
     } catch (error) {

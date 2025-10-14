@@ -2,7 +2,8 @@ import ClientTag from '../models/ClientTag.js'
 
 export const createTag = async (req, res) => {
   try {
-    const newClientTag = new ClientTag(req.body)
+    const tenantId = req.headers['x-tenant-id']
+    const newClientTag = new ClientTag({...req.body, tenantId})
     await newClientTag.save()
     return res.json(newClientTag)
   } catch (error) {
@@ -12,7 +13,8 @@ export const createTag = async (req, res) => {
 
 export const getTags = async (req, res) => {
   try {
-    const clientTags = await ClientTag.find()
+    const tenantId = req.headers['x-tenant-id']
+    const clientTags = await ClientTag.find({ tenantId }).lean()
 
     if (!clientTags) {
       return undefined

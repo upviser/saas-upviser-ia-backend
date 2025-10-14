@@ -4,7 +4,8 @@ import crypto from 'crypto'
 
 export const createToken = async (req, res) => {
     try {
-        const integrations = await Integrations.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integrations.findOne({ tenantId }).lean()
         const response = await axios.post('https://zoom.us/oauth/token', qs.stringify({
             grant_type: 'refresh_token',
             refresh_token: integrations.zoomRefreshToken
@@ -22,6 +23,7 @@ export const createToken = async (req, res) => {
 }
 
 export const redirectZoom = async (req, res) => {
+    const tenantId = req.headers['x-tenant-id']
     const clientApi = req.query.api
     const state = crypto.randomBytes(16).toString('hex')
     await axios.post(`${process.env.MAIN_API_URL}/user`, { api: clientApi, zoomState: state })
@@ -33,8 +35,9 @@ export const redirectZoom = async (req, res) => {
 }
 
 export const removeZoom = async (req, res) => {
+    const tenantId = req.headers['x-tenant-id']
     try {
-        const integrations = await Integrations.findOne().lean()
+        const integrations = await Integrations.findOne({ tenantId }).lean()
         const params = new URLSearchParams()
         params.append('token', integrations.zoomToken)
         await axios.post('https://zoom.us/oauth/revoke', params, 

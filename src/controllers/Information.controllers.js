@@ -5,9 +5,10 @@ import Domain from '../models/Domain.js'
 
 export const createInformation = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const { cart, fbp, fbc } = req.body
-        const integrations = await Integrations.findOne().lean()
-        const domain = await Domain.findOne().lean()
+        const integrations = await Integrations.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
         const nuevoFinalizar = new Information(cart)
         const newInformation = await nuevoFinalizar.save()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
@@ -76,7 +77,8 @@ export const createInformation = async (req, res) => {
 
 export const getInformation = async (req, res) => {
     try {
-        const finalizar = await Information.find()
+        const tenantId = req.headers['x-tenant-id']
+        const finalizar = await Information.find({ tenantId }).lean()
         res.send(finalizar)
     } catch (error) {
         return res.status(500).json({message: error.message})

@@ -5,7 +5,11 @@ import ShopLogin from '../models/ShopLogin.js'
 
 export const getPhones = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         WhatsappChat.aggregate([
+            {
+                $match: { tenantId } // 🔹 Filtra por tenantId antes de agrupar
+            },
             {
                 $sort: { phone: 1, createdAt: -1 } // ordenamos por phone y luego por fecha descendente
             },
@@ -45,6 +49,7 @@ export const getPhones = async (req, res) => {
 
 export const getMessagesPhone = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await WhatsappChat.find({phone: req.params.id}).lean()
         res.send(messages)
     } catch (error) {
@@ -54,7 +59,8 @@ export const getMessagesPhone = async (req, res) => {
 
 export const newMessage = async (req, res) => {
     try {
-        const integration = await Integration.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integration = await Integration.findOne({ tenantId }).lean()
         if (integration.whatsappToken && integration.whatsappToken !== '') {
             await axios.post(`https://graph.facebook.com/v21.0/${integration.idPhone}/messages`, {
                 "messaging_product": "whatsapp",
@@ -68,7 +74,7 @@ export const newMessage = async (req, res) => {
                 }
             })
             const ultMessage = await WhatsappChat.findOne({ phone: req.body.phone }).sort({ createdAt: -1 })
-            const newMessage = new WhatsappChat({phone: req.body.phone, response: req.body.response, agent: req.body.agent, view: true, tag: ultMessage.tag})
+            const newMessage = new WhatsappChat({tenantId, phone: req.body.phone, response: req.body.response, agent: req.body.agent, view: true, tag: ultMessage.tag})
             await newMessage.save()
             return res.send(newMessage)
         } else {
@@ -81,6 +87,7 @@ export const newMessage = async (req, res) => {
 
 export const viewMessage = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await WhatsappChat.find({phone: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -94,6 +101,7 @@ export const viewMessage = async (req, res) => {
 
 export const changeTag = async (req, res) => {
     try {
+        const tenantId = req.headers['x-tenant-id']
         const messages = await WhatsappChat.find({phone: req.params.id})
         const reverseMessages = messages.reverse()
         const ultimateMessage = reverseMessages[0]
@@ -107,7 +115,8 @@ export const changeTag = async (req, res) => {
 
 export const createTemplate = async (req, res) => {
     try {
-        const integrations = await Integration.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integration.findOne({ tenantId }).lean()
         const response = await axios.post(`https://graph.facebook.com/v20.0/${integrations.waba}/message_templates`, {
             "name": req.body.name.toLowerCase().replaceAll(' ', '_'),
             "language": "es",
@@ -128,7 +137,8 @@ export const createTemplate = async (req, res) => {
 
 export const getTemplates = async (req, res) => {
   try {
-    const integrations = await Integration.findOne().lean();
+    const tenantId = req.headers['x-tenant-id']
+    const integrations = await Integration.findOne({ tenantId }).lean();
     const response = await axios.get(
       `https://graph.facebook.com/v20.0/${integrations.waba}/message_templates`,
       {
@@ -143,7 +153,8 @@ export const getTemplates = async (req, res) => {
 
 export const deleteTemplate = async (req, res) => {
   try {
-    const integrations = await Integration.findOne().lean();
+    const tenantId = req.headers['x-tenant-id']
+    const integrations = await Integration.findOne({ tenantId }).lean();
     const response = await axios.delete(
       `https://graph.facebook.com/v20.0/${integrations.waba}/message_templates?name=${req.params.name}`,
       {
@@ -158,7 +169,8 @@ export const deleteTemplate = async (req, res) => {
 
 export const editTemplate = async (req, res) => {
     try {
-        const integrations = await Integration.findOne().lean();
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integration.findOne({ tenantId }).lean();
         const response = await axios.post(`https://graph.facebook.com/v20.0/${req.body.id}`, req.body, {
             headers: {
                 'Content-Type': 'application/json',
@@ -173,11 +185,12 @@ export const editTemplate = async (req, res) => {
 
 export const DisconnectWhatsapp = async (req, res) => {
     try {
-        const integrations = await Integration.findOne().lean()
+        const tenantId = req.headers['x-tenant-id']
+        const integrations = await Integration.findOne({ tenantId }).lean()
         await axios.delete(`https://graph.facebook.com/v20.0/${integrations.waba}/subscribed_apps`, {
             params: { access_token: integrations.whatsappToken }
         });
-        await Integration.findOneAndUpdate({ whatsappToken: '', idPhone: '', waba: '' })
+        await Integration.findOneAndUpdate({ tenantId }, { whatsappToken: '', idPhone: '', waba: '' })
         return res.json({ success: 'OK' })
     } catch (error) {
         return res.status(500).json({ error: error });

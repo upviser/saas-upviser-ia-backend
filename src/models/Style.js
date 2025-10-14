@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const StyleSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     design: { type: String },
     form: { type: String },
     primary: { type: String },

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const ClientDataSchema = new mongoose.Schema({
+    tenantId: { type: String, required: true },
     name: { type: String },
     data: { type: String }
 }, {

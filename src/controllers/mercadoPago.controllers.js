@@ -4,9 +4,10 @@ import Domain from '../models/Domain.js'
 
 export const createPay = async (req, res) => {
     try {
-        const paymentData = await Paym.findOne()
+        const tenantId = req.headers['x-tenant-id']
+        const paymentData = await Paym.findOne({ tenantId }).lean()
         const client = new MercadoPagoConfig({ accessToken: paymentData.mercadoPago.accessToken, options: { timeout: 5000 } });
-        const payment = new Payment(client);
+        const payment = new Payment({...client, tenantId});
         payment.create({ body: req.body })
             .then(async (response) => {
                 return res.json(response)
@@ -23,9 +24,10 @@ export const createPay = async (req, res) => {
 
 export const createSuscribe = async (req, res) => {
     try {
-        const paymentData = await Paym.findOne()
-        const domain = await Domain.findOne().lean()
-        const client = new MercadoPagoConfig({ accessToken: paymentData.mercadoPago.accessToken, options: { timeout: 5000 } });
+        const tenantId = req.headers['x-tenant-id']
+        const paymentData = await Paym.findOne({ tenantId }).lean()
+        const domain = await Domain.findOne({ tenantId }).lean()
+        const client = new MercadoPagoConfig({ tenantId, accessToken: paymentData.mercadoPago.accessToken, options: { timeout: 5000 } });
         console.log(client)
         const preapproval = new PreApproval(client);
         console.log(preapproval)

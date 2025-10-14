@@ -3,7 +3,7 @@ import { updateClientEmailStatus } from '../utils/updateEmail.js'
 import ShopLogin from '../models/ShopLogin.js'
 import Domain from '../models/Domain.js'
 
-export const sendEmailBrevo = async ({ subscribers, emailData, clientData, storeData, automatizationId, style }) => {
+export const sendEmailBrevo = async ({ subscribers, emailData, clientData, storeData, automatizationId, style, tenantId }) => {
 
     let apiInstance = new brevo.TransactionalEmailsApi()
 
@@ -29,7 +29,7 @@ export const sendEmailBrevo = async ({ subscribers, emailData, clientData, store
         }, text)
     };
 
-    const domain = await Domain.findOne().lean()
+    const domain = await Domain.findOne({ tenantId }).lean()
 
     subscribers.map(async (subscriber) => {
         const dataMap = createDataMap(subscriber._doc || subscriber, clientData)
@@ -110,7 +110,7 @@ export const sendEmailBrevo = async ({ subscribers, emailData, clientData, store
             `,
             tags: [id]
         };
-        const shopLogin = await ShopLogin.findOne({ type: 'Administrador' })
+        const shopLogin = await ShopLogin.findOne({ tenantId, type: 'Administrador' })
         if (shopLogin?.emails > 0) {
             await updateClientEmailStatus(subscriber.email, {
                 id: id,

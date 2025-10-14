@@ -11,6 +11,7 @@ import path from 'path';
 
 export const createDescriptionProduct = async (req, res) => {
     try {
+      const tenantId = req.headers['x-tenant-id']
         const openai = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY,
         });
@@ -92,6 +93,7 @@ Escribe un párrafo persuasivo que incluya las características, beneficios, y u
 
 export const createSeoProduct = async (req, res) => {
     try {
+      const tenantId = req.headers['x-tenant-id']
         const openai = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY,
         });
@@ -221,6 +223,7 @@ Cada metadescripción debe presentarse en una breve oración de entre 150 y 160 
 
 export const createDescriptionCategory = async (req, res) => {
     try {
+      const tenantId = req.headers['x-tenant-id']
         const openai = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY,
         });
@@ -294,6 +297,7 @@ Mejora tu rendimiento y redefine tus entrenamientos con nuestra exclusiva colecc
 
 export const createSeoCategory = async (req, res) => {
     try {
+      const tenantId = req.headers['x-tenant-id']
         const openai = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY,
         });
@@ -427,6 +431,7 @@ Proporciona la metadescripción en una oración concisa con un máximo de 160 ca
 
 export const createImageProduct = async (req, res) => {
     try {
+      const tenantId = req.headers['x-tenant-id']
         if (!req.files || !req.files.image) {
             return res.status(400).json({ message: 'No se ha cargado ninguna imagen.' });
         }
@@ -497,6 +502,7 @@ export const createImageProduct = async (req, res) => {
 
 export const createText = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -543,6 +549,7 @@ export const createText = async (req, res) => {
 
 export const createImage = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const generationResponse = await axios.post(
       'https://kieai.erweima.ai/api/v1/flux/kontext/generate',
       {
@@ -607,6 +614,7 @@ export const createImage = async (req, res) => {
 
 export const createVideo = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const generationResponse = await axios.post(
       'https://kieai.erweima.ai/api/v1/runway/generate',
       {

@@ -4,6 +4,7 @@ import https from 'https'
 
 export const createVideo = async (req, res) => {
   try {
+    const tenantId = req.headers['x-tenant-id']
     const fileName = req.body.name || "video.mp4";
 
     // Crear el video
@@ -35,6 +36,7 @@ export const createVideo = async (req, res) => {
 
 export const uploadImage = async (req, res) => {
     try {
+      const tenantId = req.headers['x-tenant-id']
         if (!req.files || !req.files.image) {
             return res.status(400).json({ message: 'No se ha cargado ninguna imagen.' });
         }
