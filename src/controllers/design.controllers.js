@@ -6,6 +6,7 @@ import Service from '../models/Service.js'
 import Style from '../models/Style.js'
 import Domain from '../models/Domain.js'
 import ChatTag from '../models/ChatTag.js'
+import Tenant from '../models/Tenant.js'
 
 export const createDesign = async (req, res) => {
     try {
@@ -122,6 +123,8 @@ export const getPagesFunnels = async (req, res) => {
 export const createDefaultPages = async (req, res) => {
     try {
         const tenantId = req.headers['x-tenant-id']
+        const tenant = await Tenant.findOne({ tenantId: tenantId }).lean()
+
         const newDesign = new Design({
             tenantId,
           header: {
@@ -191,7 +194,7 @@ export const createDefaultPages = async (req, res) => {
         await newDataPhone.save()
         const newStyle = new Style({ tenantId, design: 'Ninguno', form: 'Cuadradas', primary: '#2167e5', button: '#ffffff' })
         await newStyle.save()
-        const newDomain = new Domain({ tenantId, domain: 'upviser.cl', name: process.env.NAME_STORE, email: `${process.env.NAME_STORE.toLowerCase()}` })
+        const newDomain = new Domain({ tenantId, domain: tenant.domain })
         await newDomain.save()
         const newChatTag1 = new ChatTag({ tenantId, tag: 'Compra', color: '#00CE1B' })
         await newChatTag1.save()
