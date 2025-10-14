@@ -14,7 +14,6 @@ export const editDomain = async (req, res) => {
         name: req.body.domain,
       },
     })
-    console.log(mainDomainResponse)
 
     const brevoDomain = await axios.post(
       "https://api.brevo.com/v3/senders/domains",
@@ -23,7 +22,6 @@ export const editDomain = async (req, res) => {
     );
 
     if (!req.body.domain.includes('upviser.cl')) {
-      console.log('tiene upviser.cl')
       await axios.post(
         "https://api.brevo.com/v3/senders",
         {
