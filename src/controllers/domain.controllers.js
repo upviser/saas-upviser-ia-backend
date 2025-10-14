@@ -18,14 +18,11 @@ export const editDomain = async (req, res) => {
       })
     }
 
-    let brevoDomain
-    if (!req.body.domain.includes('upviser.cl')) {
-      brevoDomain = await axios.post(
-        "https://api.brevo.com/v3/senders/domains",
-        { name: req.body.domain },
-        { headers: { "api-key": process.env.BREVO_API } }
-      );
-    }
+    const brevoDomain = await axios.post(
+      "https://api.brevo.com/v3/senders/domains",
+      { name: req.body.domain },
+      { headers: { "api-key": process.env.BREVO_API } }
+    );
 
     if (!req.body.domain.includes('upviser.cl')) {
       await axios.post(
