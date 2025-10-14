@@ -8,12 +8,15 @@ export const editDomain = async (req, res) => {
     });
 
   try {
-    const mainDomainResponse = await vercel.projects.addProjectDomain({
-      idOrName: process.env.VERCEL_PROJECT_ID,
-      requestBody: {
-        name: req.body.domain,
-      },
-    })
+    let mainDomainResponse
+    if (!req.body.domain.includes('upviser.cl')) {
+      mainDomainResponse = await vercel.projects.addProjectDomain({
+        idOrName: process.env.VERCEL_PROJECT_ID,
+        requestBody: {
+          name: req.body.domain,
+        },
+      })
+    }
 
     const brevoDomain = await axios.post(
       "https://api.brevo.com/v3/senders/domains",
@@ -40,7 +43,7 @@ export const editDomain = async (req, res) => {
       }
     }
 
-    return res.json({ ...req,body, dkim1: { type: brevoDomain.data.dns_records.dkim1Record.type, value: brevoDomain.data.dns_records.dkim1Record.value, hostname: brevoDomain.data.dns_records.dkim1Record.host_name }, dkim2: { type: brevoDomain.data.dns_records.dkim2Record.type, value: brevoDomain.data.dns_records.dkim2Record.value, hostname: brevoDomain.data.dns_records.dkim2Record.host_name }, brevo: { type: brevoDomain.data.dns_records.brevo_code.type, value: brevoDomain.data.dns_records.brevo_code.value, hostname: brevoDomain.data.dns_records.brevo_code.host_name }, dmarc: { type: brevoDomain.data.dns_records.dmarc_record.type, value: brevoDomain.data.dns_records.dmarc_record.value, hostname: brevoDomain.data.dns_records.dmarc_record.host_name } })
+    return res.json({ ...req.body, dkim1: { type: brevoDomain.data.dns_records.dkim1Record.type, value: brevoDomain.data.dns_records.dkim1Record.value, hostname: brevoDomain.data.dns_records.dkim1Record.host_name }, dkim2: { type: brevoDomain.data.dns_records.dkim2Record.type, value: brevoDomain.data.dns_records.dkim2Record.value, hostname: brevoDomain.data.dns_records.dkim2Record.host_name }, brevo: { type: brevoDomain.data.dns_records.brevo_code.type, value: brevoDomain.data.dns_records.brevo_code.value, hostname: brevoDomain.data.dns_records.brevo_code.host_name }, dmarc: { type: brevoDomain.data.dns_records.dmarc_record.type, value: brevoDomain.data.dns_records.dmarc_record.value, hostname: brevoDomain.data.dns_records.dmarc_record.host_name } })
   } catch (error) {
     console.error(
       error instanceof Error ? `Error: ${error.message}` : String(error),
