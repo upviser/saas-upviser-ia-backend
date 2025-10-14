@@ -123,11 +123,10 @@ export const getPagesFunnels = async (req, res) => {
 
 export const createDefaultPages = async (req, res) => {
     try {
-        const tenantId = req.headers['x-tenant-id']
-        const tenant = await Tenant.findOne({ tenantId: tenantId }).lean()
+        const tenant = await Tenant.findOne({ tenantId: req.body.tenantId }).lean()
 
         const newDesign = new Design({
-            tenantId,
+            tenantId: req.body.tenantId,
           header: {
             topStrip: '',
             logo: 'Logo'
@@ -177,23 +176,23 @@ export const createDefaultPages = async (req, res) => {
           categoryPage: [{ design: [{ content: 'Bloque 6' }, { content: 'Categorias 2' }, { content: 'Productos' }, { content: 'Suscripción' }] }]
         })
         const newDesignSave = await newDesign.save()
-        const newTag = new ClientTag({ tenantId, tag: 'suscriptores' })
+        const newTag = new ClientTag({ tenantId: req.body.tenantId, tag: 'suscriptores' })
         await newTag.save()
-        const newTag2 = new ClientTag({ tenantId, tag: 'clientes' })
+        const newTag2 = new ClientTag({ tenantId: req.body.tenantId, tag: 'clientes' })
         await newTag2.save()
-        const newTag3 = new ClientTag({ tenantId, tag: 'formulario-contacto' })
+        const newTag3 = new ClientTag({ tenantId: req.body.tenantId, tag: 'formulario-contacto' })
         await newTag3.save()
-        const newTag4 = new ClientTag({ tenantId, tag: 'desuscrito' })
+        const newTag4 = new ClientTag({ tenantId: req.body.tenantId, tag: 'desuscrito' })
         await newTag4.save()
-        const newDataFirstName = new ClientData({ tenantId, name: 'Nombre', data: 'firstName' })
+        const newDataFirstName = new ClientData({ tenantId: req.body.tenantId, name: 'Nombre', data: 'firstName' })
         await newDataFirstName.save()
-        const newDataLastName = new ClientData({ tenantId, name: 'Apellido', data: 'lastName' })
+        const newDataLastName = new ClientData({ tenantId: req.body.tenantId, name: 'Apellido', data: 'lastName' })
         await newDataLastName.save()
-        const newDataEmail = new ClientData({ tenantId, name: 'Email', data: 'email' })
+        const newDataEmail = new ClientData({ tenantId: req.body.tenantId, name: 'Email', data: 'email' })
         await newDataEmail.save()
-        const newDataPhone = new ClientData({ tenantId, name: 'Teléfono', data: 'phone' })
+        const newDataPhone = new ClientData({ tenantId: req.body.tenantId, name: 'Teléfono', data: 'phone' })
         await newDataPhone.save()
-        const newStyle = new Style({ tenantId, design: 'Ninguno', form: 'Cuadradas', primary: '#2167e5', button: '#ffffff' })
+        const newStyle = new Style({ tenantId: req.body.tenantId, design: 'Ninguno', form: 'Cuadradas', primary: '#2167e5', button: '#ffffff' })
         await newStyle.save()
         await axios.post(
             "https://api.brevo.com/v3/senders",
@@ -203,15 +202,15 @@ export const createDefaultPages = async (req, res) => {
             },
             { headers: { "api-key": process.env.BREVO_API } }
         );
-        const newDomain = new Domain({ tenantId, domain: tenant.domain, name: tenant.domain.replace('.upviser.cl', ''), email: `contacto@${tenant.domain}` })
+        const newDomain = new Domain({ tenantId: req.body.tenantId, domain: tenant.domain, name: tenant.domain.replace('.upviser.cl', ''), email: `contacto@${tenant.domain}` })
         await newDomain.save()
-        const newChatTag1 = new ChatTag({ tenantId, tag: 'Compra', color: '#00CE1B' })
+        const newChatTag1 = new ChatTag({ tenantId: req.body.tenantId, tag: 'Compra', color: '#00CE1B' })
         await newChatTag1.save()
-        const newChatTag2 = new ChatTag({ tenantId, tag: 'Agente IA', color: '#003CFF' })
+        const newChatTag2 = new ChatTag({ tenantId: req.body.tenantId, tag: 'Agente IA', color: '#003CFF' })
         await newChatTag2.save()
-        const newChatTag3 = new ChatTag({ tenantId, tag: 'Productos', color: '#8000FF' })
+        const newChatTag3 = new ChatTag({ tenantId: req.body.tenantId, tag: 'Productos', color: '#8000FF' })
         await newChatTag3.save()
-        const newChatTag4 = new ChatTag({ tenantId, tag: 'Transferido', color: '#FF6200' })
+        const newChatTag4 = new ChatTag({ tenantId: req.body.tenantId, tag: 'Transferido', color: '#FF6200' })
         await newChatTag4.save()
         return res.json(newDesignSave)
     } catch (error) {
