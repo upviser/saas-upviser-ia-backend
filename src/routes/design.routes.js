@@ -15,7 +15,7 @@ router.get('/pages-funnels', getPagesAndFunnels)
 
 router.get('/page-funnel/:id', getPagesFunnels)
 
-router.get('/create-default-design', createDefaultPages)
+router.post('/create-default-design', createDefaultPages)
 
 router.post('/style', createStyle)
 
