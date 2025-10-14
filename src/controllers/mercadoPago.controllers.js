@@ -42,7 +42,7 @@ export const createSuscribe = async (req, res) => {
                 currency_id: 'CLP',
                 start_date: new Date().toISOString()
             },
-            back_url: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/gracias-por-comprar`,
+            back_url: `https://${domain.domain}/gracias-por-comprar`,
             status: 'authorized'
         };
         console.log(body)

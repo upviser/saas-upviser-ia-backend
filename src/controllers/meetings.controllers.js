@@ -278,7 +278,7 @@ export const getMeeting = async (req, res) => {
 export const getMeetingsEmail = async (req, res) => {
     try {
         const tenantId = req.headers['x-tenant-id']
-        const meetings = await Meeting.find({ email: req.params.email })
+        const meetings = await Meeting.find({ tenantId, email: req.params.email })
         return res.json(meetings)
     } catch (error) {
         return res.status(500).json({message: error.message})

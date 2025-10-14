@@ -118,7 +118,7 @@ export const sendEmailBrevo = async ({ subscribers, emailData, clientData, store
                 subject: emailData.affair,
                 opened: false,
                 clicked: false
-            });
+            }, tenantId);
             const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
             console.log('API called successfully. Returned data: ' + JSON.stringify(data));
             await ShopLogin.findByIdAndUpdate(shopLogin._id, { emails: shopLogin.emails - 1 })
@@ -129,7 +129,7 @@ export const sendEmailBrevo = async ({ subscribers, emailData, clientData, store
                 subject: emailData.affair,
                 opened: false,
                 clicked: false
-            });
+            }, tenantId);
             const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
             console.log('API called successfully. Returned data: ' + JSON.stringify(data));
             await ShopLogin.findByIdAndUpdate(shopLogin._id, { emailsAdd: shopLogin.emailsAdd + 1 })

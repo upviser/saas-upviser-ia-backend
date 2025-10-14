@@ -137,7 +137,7 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services,
             subject: `¡Hola ${sell?.firstName ? sell.firstName : pay?.firstName}! Tu compra ha sido realizada con exito`,
             opened: false,
             clicked: false
-        });
+        }, tenantId);
         const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
         console.log('API called successfully. Returned data: ' + JSON.stringify(data));
         await ShopLogin.findByIdAndUpdate(shopLogin._id, { emails: shopLogin.emails - 1 })
@@ -147,7 +147,7 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services,
             subject: `¡Hola ${sell?.firstName ? sell.firstName : pay?.firstName}! Tu compra ha sido realizada con exito`,
             opened: false,
             clicked: false
-        });
+        }, tenantId);
         const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
         console.log('API called successfully. Returned data: ' + JSON.stringify(data));
         await ShopLogin.findByIdAndUpdate(shopLogin._id, { emailsAdd: shopLogin.emailsAdd + 1 })

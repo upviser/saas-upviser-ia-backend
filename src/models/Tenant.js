@@ -2,7 +2,11 @@ import mongoose from 'mongoose'
 
 const TenantSchema = new mongoose.Schema({
     tenantId: { type: String, required: true },
-    domain: { type: String }
+    domain: { type: String },
+    instagramState: { type: String },
+    instagramId: { type: String },
+    messengerId: { type: String },
+    whatsappId: { type: String }
 }, {
     timestamps: true
 })

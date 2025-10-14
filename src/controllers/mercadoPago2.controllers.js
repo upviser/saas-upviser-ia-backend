@@ -14,9 +14,9 @@ export const createOrder = async (req, res) => {
       body: {
         items: req.body,
         back_urls: {
-          success: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/procesando-pago`,
-          pending: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/procesando-pago`,
-          failure: `${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}/procesando-pago`,
+          success: `https://${domain.domain}`,
+          pending: `https://${domain.domain}`,
+          failure: `https://${domain.domain}`,
         },
         auto_return: 'approved'
       }
@@ -30,7 +30,6 @@ export const createOrder = async (req, res) => {
 
 export const receiveWebhook = async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id']
     return res.json({
       Payment: req.query.payment_id,
       Status: req.query.status,

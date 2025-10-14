@@ -26,7 +26,7 @@ export const commit = asyncHandler(async function (req, res) {
   try {
     const tenantId = req.headers['x-tenant-id']
     let { token } = req.body
-    const payment = await Payment.findOne().lean()
+    const payment = await Payment.findOne({ tenantId }).lean()
     const commitResponse = await (new WebpayPlus.Transaction(new Options(payment.transbank.commerceCode, payment.transbank.apiKey, (payment.transbank.commerceCode && payment.transbank.commerceCode === '597055555532') && (payment.transbank.apiKey && payment.transbank.apiKey === '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C') ? Environment.Integration : Environment.Production))).commit(token)
     res.send(commitResponse)
   } catch (error) {

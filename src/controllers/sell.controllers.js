@@ -193,10 +193,10 @@ export const updateSell = async (req, res) => {
         const { sell, fbp, fbc } = req.body
         const updateSell = await Sell.findByIdAndUpdate(req.params.id, {...sell, shippingCode: shippingCode}, {new: true})
         if (sell.shippingState === 'Productos empaquetados') {
-            await sendEmailBrevo({ subscribers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: 'Los productos de tu compra ya han sido empaquetados', title: 'Te avisaremos cuando ya esten tus productos en camino', paragraph: 'Hola, te queriamos comentar que ya hemos empaquetado los productos de tu compra, en cuanto realicemos el envio te avisaremos por este medio.' } })
+            await sendEmailBrevo({ subscribers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: 'Los productos de tu compra ya han sido empaquetados', title: 'Te avisaremos cuando ya esten tus productos en camino', paragraph: 'Hola, te queriamos comentar que ya hemos empaquetado los productos de tu compra, en cuanto realicemos el envio te avisaremos por este medio.' }, tenantId })
         }
         if (sell.shippingState === 'Envío realizado') {
-            await sendEmailBrevo({ subscribers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: 'Tus productos ya se encuentran en camino', title: 'Tu compra ya esta en camino a tu hogar', paragraph: 'Hola, queriamos comentarte que ya hemos realizado el envio de los productos de tu compra.' } })
+            await sendEmailBrevo({ subscribers: [{ firstName: sell.firstName, email: sell.email }], emailData: { affair: 'Tus productos ya se encuentran en camino', title: 'Tu compra ya esta en camino a tu hogar', paragraph: 'Hola, queriamos comentarte que ya hemos realizado el envio de los productos de tu compra.' }, tenantId })
         }
         if (sell.state === 'Pago realizado') {
             const integrations = await Integrations.findOne({ tenantId }).lean()
@@ -245,7 +245,7 @@ export const updateSell = async (req, res) => {
             }
             const storeData = await StoreData.findOne({ tenantId }).lean()
             const style = await Style.findOne({ tenantId }).lean()
-            sendEmailBuyBrevo({ sell: sell, storeData: storeData, style: style })
+            sendEmailBuyBrevo({ sell: sell, storeData: storeData, style: style, tenantId })
             const date = new Date()
             date.setDate(date.getDate() + 10)
             const cronExpression = formatDateToCron(date)
@@ -333,7 +333,7 @@ export const updatedSell = async (req, res) => {
             }
             const storeData = await StoreData.findOne({ tenantId }).lean()
             const style = await Style.findOne({ tenantId }).lean()
-            sendEmailBuyBrevo({ sell: updatedSell, storeData: storeData, style: style })
+            sendEmailBuyBrevo({ sell: updatedSell, storeData: storeData, style: style, tenantId })
             const date = new Date()
             date.setDate(date.getDate() + 10)
             const cronExpression = formatDateToCron(date)

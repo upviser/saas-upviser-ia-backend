@@ -1,6 +1,7 @@
 import axios from 'axios'
 import Integrations from '../models/Integrations.js'
 import crypto from 'crypto'
+import Tenant from '../models/Tenant.js'
 
 export const createToken = async (req, res) => {
     try {
@@ -23,15 +24,16 @@ export const createToken = async (req, res) => {
 }
 
 export const redirectZoom = async (req, res) => {
-    const tenantId = req.headers['x-tenant-id']
-    const clientApi = req.query.api
-    const state = crypto.randomBytes(16).toString('hex')
-    await axios.post(`${process.env.MAIN_API_URL}/user`, { api: clientApi, zoomState: state })
-    const authUrl = `https://zoom.us/oauth/authorize?response_type=code`
-        + `&client_id=${process.env.ZOOM_CLIENT_ID}`
-        + `&redirect_uri=${encodeURIComponent(process.env.ZOOM_REDIRECT_URI)}`
-        + `&state=${state}`
-    res.redirect(authUrl);
+    const state = req.query.state
+    const tenant = await Tenant.findOne({ zoomState: state }).lean()
+    if (tenant) {
+        const authUrl = `https://zoom.us/oauth/authorize?response_type=code`
+            + `&client_id=${process.env.ZOOM_CLIENT_ID}`
+            + `&redirect_uri=${encodeURIComponent(process.env.ZOOM_REDIRECT_URI)}`
+            + `&state=${state}`
+        res.redirect(authUrl);
+    }
+    
 }
 
 export const removeZoom = async (req, res) => {

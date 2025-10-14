@@ -1,14 +1,14 @@
 import Client from '../models/Client.js'
 
-export const updateClientEmailStatus = async (email, emailData) => {
+export const updateClientEmailStatus = async (email, emailData, tenantId) => {
     await Client.findOneAndUpdate(
-        { email: email },
+        { tenantId, email: email },
         { $push: { emails: emailData } }
     );
 };
 
 export const updateClientEmailStatusById = async (email, emailId, updateData) => {
-    const client = await Client.findOne({ email: email })
+    const client = await Client.findOne({ 'emails.id': emailId }).lean()
     let emailUpdate = client.emails.find(email => email.id === emailId)
     if (updateData === 'unique_opened') {
         emailUpdate.opened = true

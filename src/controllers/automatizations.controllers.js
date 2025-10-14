@@ -114,7 +114,7 @@ export const createAutomatization = async (req, res) => {
                     const clientData = await ClientData.find({ tenantId })
                     const storeData = await StoreData.find({ tenantId })
                     const style = await Style.findOne({ tenantId })
-                    sendEmailBrevo({ subscribers: filteredSubscribers, emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: newAutomatizationSave._id, style: style })
+                    sendEmailBrevo({ tenantId, subscribers: filteredSubscribers, emailData: email, clientData: clientData, storeData: storeData[0], automatizationId: newAutomatizationSave._id, style: style })
                 })
             }
         })
