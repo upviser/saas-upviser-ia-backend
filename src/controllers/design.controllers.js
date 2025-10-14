@@ -194,16 +194,6 @@ export const createDefaultPages = async (req, res) => {
         await newDataPhone.save()
         const newStyle = new Style({ tenantId: req.body.tenantId, design: 'Ninguno', form: 'Cuadradas', primary: '#2167e5', button: '#ffffff' })
         await newStyle.save()
-        await axios.post(
-            "https://api.brevo.com/v3/senders",
-            {
-                name: tenant.domain.replace('.upviser.cl', ''),
-                email: `${tenant.domain.replace('.upviser.cl', '')}@emails.upviser.cl`,
-            },
-            { headers: { "api-key": process.env.BREVO_API } }
-        );
-        const newDomain = new Domain({ tenantId: req.body.tenantId, domain: tenant.domain, name: tenant.domain.replace('.upviser.cl', ''), email: `contacto@${tenant.domain}` })
-        await newDomain.save()
         const newChatTag1 = new ChatTag({ tenantId: req.body.tenantId, tag: 'Compra', color: '#00CE1B' })
         await newChatTag1.save()
         const newChatTag2 = new ChatTag({ tenantId: req.body.tenantId, tag: 'Agente IA', color: '#003CFF' })
