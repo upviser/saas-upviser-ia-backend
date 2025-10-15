@@ -7,4 +7,6 @@ router.post('/contact', createMessage)
 
 router.get('/contact', getMessages)
 
+router.get('/', async (req, res) => res.json({ success: 'OK' }))
+
 export default router
