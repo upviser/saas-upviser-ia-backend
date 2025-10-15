@@ -30,6 +30,7 @@ export const getTenant = async (req, res) => {
 
 export const getTenantByHostname = async (req, res) => {
     try {
+        console.log(req.params.hostname)
         const tenant = await Tenant.findOne({ hostname: req.params.hostname }).lean()
         return res.json(tenant)
     } catch (error) {
