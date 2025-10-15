@@ -3,7 +3,7 @@ import Session from '../models/Session.js'
 export const createSession = async (req, res) => {
     try {
         const tenantId = req.headers['x-tenant-id']
-        const newSession = new Session(...req.body, tenantId)
+        const newSession = new Session({...req.body, tenantId})
         const newSessionSave = await newSession.save()
         return res.json(newSessionSave)
     } catch (error) {
