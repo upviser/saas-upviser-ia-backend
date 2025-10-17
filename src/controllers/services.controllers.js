@@ -3,7 +3,7 @@ import Service from '../models/Service.js'
 export const createService = async (req, res) => {
     try {
         const tenantId = req.headers['x-tenant-id']
-        const newService = new Service(...req.body, tenantId)
+        const newService = new Service({...req.body, tenantId})
         const newServiceSave = await newService.save()
         return res.json(newServiceSave)
     } catch (error) {
