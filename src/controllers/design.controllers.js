@@ -216,7 +216,7 @@ export const createStyle = async (req, res) => {
             const updateStyle = await Style.findByIdAndUpdate(style._id, req.body, { new: true })
             return res.json(updateStyle)
         } else {
-            const newStyle = new Style(req.body)
+            const newStyle = new Style({ ...req.body, tenantId })
             const newStyleSave = await newStyle.save()
             return res.json(newStyleSave)
         }
