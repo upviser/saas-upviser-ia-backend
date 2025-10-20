@@ -21,7 +21,7 @@ export const getTenants = async (req, res) => {
 
 export const getTenant = async (req, res) => {
     try {
-        const tenant = await Tenant.findOne({ tenantId: req.params.tenant }).lean()
+        const tenant = await Tenant.findOne({ tenantId: req.params.tenantId }).lean()
         return res.json(tenant)
     } catch (error) {
         return res.status(500).json({message: error.message})

@@ -1292,7 +1292,7 @@ export const callbackFacebook = async (req, res) => {
         );
 
         if (state) {
-            const tenant = await Tenant.find({ instagramState: state }).lean()
+            const tenant = await Tenant.findOne({ instagramState: state }).lean()
             if (tenant) {
                 const tenantId = tenant.tenantId
                 const integrations = await Integration.findOne({ tenantId }).lean();

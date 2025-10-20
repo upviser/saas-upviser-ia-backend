@@ -7,12 +7,12 @@ router.post('/tenant', createTenant)
 
 router.get('/tenants', getTenants)
 
-router.get('/tenant/:tenant', getTenant)
+router.get('/tenant/:tenantId', getTenant)
 
 router.get('/tenant-hostname/:hostname', getTenantByHostname)
 
-router.put('/tenant/:tenant', editTenant)
+router.put('/tenant/:tenantId', editTenant)
 
-router.delete('/tenant/:tenant', deleteTenant)
+router.delete('/tenant/:tenantId', deleteTenant)
 
 export default router

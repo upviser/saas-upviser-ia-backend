@@ -167,8 +167,6 @@ export const MessengerToken = async (req, res) => {
         await newIntegration.save()
     }
 
-    await axios.post(`${process.env.MAIN_API_URL}/user`, { api: process.env.API_URL, idPage: pageId });
-
     res.status(200).json({ success: 'OK' });
   } catch (err) {
     console.error(err);
