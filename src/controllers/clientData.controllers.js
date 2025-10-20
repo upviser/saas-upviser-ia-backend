@@ -3,7 +3,7 @@ import ClientData from '../models/ClientData.js'
 export const createtData = async (req, res) => {
     try {
         const tenantId = req.headers['x-tenant-id']
-        const newData = new ClientData(tenantId, {name: req.body.data, data: req.body.data.toLowerCase().replace(/ /g, '_')})
+        const newData = new ClientData({tenantId, name: req.body.data, data: req.body.data.toLowerCase().replace(/ /g, '_')})
         const newDataSave = await newData.save()
         return res.json(newDataSave)
     } catch (error) {
