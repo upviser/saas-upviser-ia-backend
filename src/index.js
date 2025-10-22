@@ -97,19 +97,73 @@ try {
     console.error('Error loading tasks:', error)
 }
 
-cron.schedule("0 0 1 * *", async () => {
-    const accounts = await ShopLogin.find({ type: 'Administrador' }).lean()
+cron.schedule("0 0 * * *", async () => {
+    try {
+        const now = new Date()
 
-    if (accounts.length) {
-        accounts.map(async account => {
-            await ShopLogin.findByIdAndUpdate(account._id, {
-                emails: account.plan === 'Esencial' ? 1500 : account.plan === 'Avanzado' ? 3500 : account.plan === 'Profesional' ? 6000 : 0,
-                textAI: account.plan === 'Esencial' ? 100 : account.plan === 'Avanzado' ? 200 : account.plan === 'Profesional' ? 400 : 0,
-                imagesAI: account.plan === 'Esencial' ? 20 : account.plan === 'Avanzado' ? 40 : account.plan === 'Profesional' ? 80 : 0,
-                videosAI: account.plan === 'Avanzado' ? 15 : account.plan === 'Profesional' ? 30 : 0,
-                conversationsAI: account.plan === 'Esencial' ? 250 : account.plan === 'Avanzado' ? 600 : account.plan === 'Profesional' ? 1500 : 0
-            })
-        })
+        const accounts = await ShopLogin.find({ type: 'Administrador' }).lean()
+
+        for (const account of accounts) {
+            const updates = {}
+
+            const createdAt = new Date(account.createdAt)
+            const dateSubscription = new Date(account.dateSubscription)
+
+            const diffCreated = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24)) // en días
+            const diffSubscription = Math.floor((now - dateSubscription) / (1000 * 60 * 60 * 24)) // en días
+
+            // Si han pasado más de 3 días desde creado y aún no tiene subscription activa
+            if (diffCreated > 3 && !account.subscription) {
+                updates.state = false
+            }
+
+            // Si tiene suscripción activa y ha pasado 1 mes (30 días) desde la última renovación
+            if (account.subscription && diffSubscription >= 30) {
+                // Aplicar el plan correspondiente
+                switch (account.plan) {
+                    case 'Esencial':
+                        updates.emails = 1500
+                        updates.textAI = 100
+                        updates.imagesAI = 20
+                        updates.videosAI = 0
+                        updates.conversationsAI = 250
+                        break
+                    case 'Avanzado':
+                        updates.emails = 3500
+                        updates.textAI = 200
+                        updates.imagesAI = 40
+                        updates.videosAI = 15
+                        updates.conversationsAI = 600
+                        break
+                    case 'Profesional':
+                        updates.emails = 6000
+                        updates.textAI = 400
+                        updates.imagesAI = 80
+                        updates.videosAI = 30
+                        updates.conversationsAI = 1500
+                        break
+                    default:
+                        updates.emails = 0
+                        updates.textAI = 0
+                        updates.imagesAI = 0
+                        updates.videosAI = 0
+                        updates.conversationsAI = 0
+                        break
+                }
+
+                // Actualizar fecha de suscripción
+                updates.dateSubscription = now
+            }
+
+            // Si hay algo que actualizar
+            if (Object.keys(updates).length > 0) {
+                await ShopLogin.findByIdAndUpdate(account._id, updates)
+            }
+        }
+
+        console.log(`[CRON] Ejecutado el ${now.toISOString()} para ${accounts.length} cuentas.`)
+    } catch (error) {
+        console.error('Error en cron job:', error)
     }
 })
 

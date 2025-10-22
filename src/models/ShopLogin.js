@@ -2,6 +2,9 @@ import mongoose from 'mongoose'
 
 const ShopLoginSchema = new mongoose.Schema({
     tenantId: { type: String, required: true },
+    state: { type: Boolean },
+    subscription: { type: Boolean },
+    dateSubscription: { type: Date },
     name: { type: String },
     email: { type: String, required: true },
     password: { type: String, required: true, select: false },

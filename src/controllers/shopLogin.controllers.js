@@ -12,7 +12,7 @@ export const createAccount = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 12)
         const newAccount = new ShopLogin({ ...req.body, password: hashedPassword })
         const accountSave = await newAccount.save()
-        return res.send({ name, email: accountSave.email, _id: accountSave._id, type, permissions, plan, tenantId })
+        res.send({ name, email: accountSave.email, _id: accountSave._id, type, permissions, plan, tenantId })
     } catch (error) {
         console.log(error)
         return res.status(500).json({message: error.message})
