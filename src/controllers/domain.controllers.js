@@ -9,6 +9,7 @@ export const editDomain = async (req, res) => {
 
   try {
     let mainDomainResponse
+    let brevoDomain
     if (!req.body.domain.includes('upviser.cl')) {
       mainDomainResponse = await vercel.projects.addProjectDomain({
         idOrName: process.env.VERCEL_PROJECT_ID,
@@ -16,13 +17,13 @@ export const editDomain = async (req, res) => {
           name: req.body.domain,
         },
       })
-    }
 
-    const brevoDomain = await axios.post(
-      "https://api.brevo.com/v3/senders/domains",
-      { name: req.body.domain },
-      { headers: { "api-key": process.env.BREVO_API } }
-    );
+      brevoDomain = await axios.post(
+        "https://api.brevo.com/v3/senders/domains",
+        { name: req.body.domain },
+        { headers: { "api-key": process.env.BREVO_API } }
+      );
+    }
 
     if (!req.body.domain.includes('upviser.cl')) {
       await axios.post(
