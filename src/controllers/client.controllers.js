@@ -262,7 +262,7 @@ export const updateClient = async (req, res) => {
 export const updateClientEmail = async (req, res) => {
   try {
     const tenantId = req.headers['x-tenant-id']
-    const updateClient = await Client.findOneAndUpdate({ email: req.params.id }, req.body, { new: true })
+    const updateClient = await Client.findOneAndUpdate({ email: req.params.id, tenantId }, req.body, { new: true })
     return res.send(updateClient)
   } catch (error) {
     return res.status(500).json({message: error.message})
@@ -283,7 +283,7 @@ export const getClient = async (req, res) => {
 export const getClientByEmail = async (req, res) => {
   try {
     const tenantId = req.headers['x-tenant-id']
-    const client = await Client.findOne({ email: req.params.id }).lean()
+    const client = await Client.findOne({ email: req.params.id, tenantId }).lean()
     if (!client) return res.json({meesage: 'Not Found'})
     return res.send(client)
   } catch (error) {
