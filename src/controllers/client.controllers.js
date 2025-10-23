@@ -13,7 +13,7 @@ import bcrypt from 'bcryptjs'
 export const createClient = async (req, res) => {
   try {
     const tenantId = req.headers['x-tenant-id']
-    const client = await Client.findOne({ email: req.body.email }).lean();
+    const client = await Client.findOne({ email: req.body.email, tenantId }).lean();
     if (client) {
       const clientTagsSet = new Set(client.tags || []);
       const reqBodyTagsSet = new Set(req.body.tags || []);
