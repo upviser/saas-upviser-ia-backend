@@ -6,8 +6,8 @@ export const getStatus = async (req, res) => {
     const email = req.body.email
     const emailId = req.body.tags[0]
     
-    if (event === 'unique_opened') {
-        await updateClientEmailStatusById(email, emailId, 'unique_opened');
+    if (event === 'opened') {
+        await updateClientEmailStatusById(email, emailId, 'opened');
     } else if (event === 'click') {
         await updateClientEmailStatusById(email, emailId, 'click');
     }
