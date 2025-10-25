@@ -182,7 +182,7 @@ export const DisconnectFacebook = async (req, res) => {
             params: { access_token: integrations.userAccessToken }
         });
 
-        await Integration.findOneAndUpdate({ messengerToken: '', idPage: '', userAccessToken: '' })
+        await Integration.findOneAndUpdate({ tenantId }, { messengerToken: '', idPage: '', userAccessToken: '' })
         return res.json({ success: 'OK' })
     } catch (error) {
         return res.status(500).json({ error: error });
