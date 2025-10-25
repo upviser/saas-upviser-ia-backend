@@ -19,6 +19,7 @@ import Notification from "../models/Notification.js"
 import Domain from '../models/Domain.js'
 import Automatization from "../models/Automatization.js"
 import Tenant from "../models/Tenant.js"
+import qs from 'qs';
 
 export const createWebhook = async (req, res) => {
     const tenantId = req.headers['x-tenant-id']
