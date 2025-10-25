@@ -183,7 +183,6 @@ export const DisconnectFacebook = async (req, res) => {
         });
 
         await Integration.findOneAndUpdate({ messengerToken: '', idPage: '', userAccessToken: '' })
-        await axios.post(`${process.env.MAIN_API_URL}/user`, { api: process.env.API_URL, idPage: '' })
         return res.json({ success: 'OK' })
     } catch (error) {
         return res.status(500).json({ error: error });

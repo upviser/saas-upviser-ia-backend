@@ -128,7 +128,6 @@ export const deleteInstagram = async (req, res) => {
             }
         );
         await Integration.findByIdAndUpdate(integrations._id, { idInstagram: '', instagramToken: '' })
-        await axios.post(`${process.env.MAIN_API_URL}/user`, { api: process.env.API_URL, idInstagram: '' })
         return res.json({ success: 'OK' })
     } catch (error) {
         return res.status(500).json({message: error.message})
