@@ -1302,14 +1302,14 @@ export const callbackFacebook = async (req, res) => {
                         instagramToken: longLivedAccessToken,
                         idInstagram: instagramBusinessAccountId
                     });
-                    await Tenant.findByIdAndUpdate(tenantId, { instagramId: instagramBusinessAccountId })
+                    await Tenant.findOneAndUpdate({ tenantId }, { instagramId: instagramBusinessAccountId })
                 } else {
                     const newIntegration = new Integration({
                         instagramToken: longLivedAccessToken,
                         idInstagram: instagramBusinessAccountId
                     })
                     await newIntegration.save()
-                    await Tenant.findByIdAndUpdate(tenantId, { instagramId: instagramBusinessAccountId })
+                    await Tenant.findOneAndUpdate({ tenantId }, { instagramId: instagramBusinessAccountId })
                 }
             }
         }
