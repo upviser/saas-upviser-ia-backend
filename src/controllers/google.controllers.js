@@ -2,14 +2,14 @@ import { OAuth2Client } from 'google-auth-library'
 import Tenant from '../models/Tenant.js';
 import Integrations from '../models/Integrations.js';
 
+const oauth2Client = new OAuth2Client({
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    redirectUri: process.env.GOOGLE_REDIRECT_URI,
+});
+
 export const googleAuth = async (req, res) => {
     try {
-        const oauth2Client = new OAuth2Client({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            redirectUri: process.env.GOOGLE_REDIRECT_URI,
-        });
-        
         const scopes = [
             "https://www.googleapis.com/auth/meetings.space.created",
         ];
@@ -29,13 +29,7 @@ export const googleAuth = async (req, res) => {
 
 export const googleAuthCallback = async (req, res) => {
     try {
-        const oauth2Client = new OAuth2Client({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            redirectUri: process.env.GOOGLE_REDIRECT_URI,
-        });
-
-        const { tokens } = await OAuth2Client.getToken(req.query.code)
+        const { tokens } = await oauth2Client.getToken(req.query.code)
 
         const tenant = await Tenant.findOne({ googleState: req.query.state }).lean()
 
