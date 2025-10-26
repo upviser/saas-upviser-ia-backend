@@ -31,6 +31,8 @@ export const googleAuthCallback = async (req, res) => {
     try {
         const { tokens } = await oauth2Client.getToken(req.query.code)
 
+        console.log(tokens)
+
         const tenant = await Tenant.findOne({ googleState: req.query.state }).lean()
 
         if (tenant) {
