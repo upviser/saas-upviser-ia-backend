@@ -78,7 +78,7 @@ export const CreateMeeting = async (req, res) => {
             const integrations = await Integrations.findOne({ tenantId }).lean()
             const domain = await Domain.findOne({ tenantId }).lean()
             let token
-            if (integrations.zoomCreateToken && integrations.zoomCreateToken !== '' && integrations.zoomExpiresIn && integrations.zoomExpiresIn !== '') {
+            if (integrations?.zoomCreateToken && integrations.zoomCreateToken !== '' && integrations.zoomExpiresIn && integrations.zoomExpiresIn !== '') {
                 if (isTokenExpired(integrations.zoomCreateToken, integrations.zoomExpiresIn)) {
                     const response = await axios.post('https://zoom.us/oauth/token', qs.stringify({
                         grant_type: 'refresh_token',
@@ -190,7 +190,7 @@ export const CreateMeeting = async (req, res) => {
             const integrations = await Integrations.findOne({ tenantId }).lean()
             const domain = await Domain.findOne({ tenantId }).lean()
             let response
-            if (integrations.googleToken && integrations.googleToken !== '' && integrations.googleRefreshToken && integrations.googleRefreshToken !== '' && integrations.googleExpired && integrations.googleExpired !== '') {
+            if (integrations?.googleToken && integrations.googleToken !== '' && integrations.googleRefreshToken && integrations.googleRefreshToken !== '' && integrations.googleExpired && integrations.googleExpired !== '') {
                 oauth2Client.setCredentials({
                     access_token: integrations.googleToken,
                     refresh_token: integrations.googleRefreshToken,
