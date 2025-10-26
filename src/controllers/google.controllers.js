@@ -49,3 +49,13 @@ export const googleAuthCallback = async (req, res) => {
         return res.status(500).json({message: error.message})
     }
 }
+
+export const removeGoogle = async (req, res) => {
+    try {
+        const tenantId = req.headers['x-tenant-id']
+        const integration = await Integrations.findOneAndUpdate({ tenantId }, { googleToken: '', googleRefreshToken: '' })
+        return res.json(integration)
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
+}
