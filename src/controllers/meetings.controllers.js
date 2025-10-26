@@ -13,6 +13,13 @@ import Integrations from '../models/Integrations.js'
 import Style from '../models/Style.js'
 import Domain from '../models/Domain.js'
 import qs from 'qs'
+import { OAuth2Client } from 'google-auth-library'
+
+const oauth2Client = new OAuth2Client({
+  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  redirectUri: process.env.GOOGLE_REDIRECT_URI,
+});
 
 export const editCalendar = async (req, res) => {
     try {
@@ -160,6 +167,97 @@ export const CreateMeeting = async (req, res) => {
             const style = await Style.find({ tenantId }).lean()
             const date = moment.tz(req.body.date, 'America/Santiago')
             await sendEmailBrevo({ tenantId, subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu llamada ha sido agendada con exito`, title: 'Hemos agendado tu llamada exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu llamada con fecha ${date.date()}/${date.month() + 1}/${date.year()} a las ${date.hours()}:${date.minutes() >= 9 ? date.minutes() : `0${date.minutes()}`} ha sido agendada con exito, aqui te dejamos el acceso a la llamada en el siguiente boton, para cualquier consulta comunicate con nostros a traves de nuestro Whatsapp +56${storeData[0].phone}.`, buttonText: 'Ingresar a la llamada', url: meetingResponse.data.start_url }, clientData: clientData, storeData: storeData[0], style: style[0] })
+        } else if (req.body.type === 'Llamada por Google Meet') {
+            const integrations = await Integrations.findOne({ tenantId }).lean()
+            const domain = await Domain.findOne({ tenantId }).lean()
+            oauth2Client.setCredentials({
+                access_token: integrations.googleToken,
+                refresh_token: integrations.googleRefreshToken,
+                expiry_date: integrations.googleExpired,
+            })
+            const currentTime = Date.now();
+            if (integrations.googleExpired && integrations.googleExpired < currentTime) {
+                const newTokens = await oauth2Client.refreshAccessToken();
+                const updated = newTokens.credentials;
+
+                await Integrations.findByIdAndUpdate(integrations._id, {
+                    googleToken: updated.access_token,
+                    googleRefreshToken: updated.refresh_token || integrations.googleRefreshToken,
+                    googleExpiryDate: updated.expiry_date,
+                });
+
+                oauth2Client.setCredentials(updated);
+            }
+            const response = await axios.post('https://meet.googleapis.com/v1/meetings', {
+                    requestId: `req-${Date.now()}`,
+                }, {
+                headers: {
+                    'Authorization': `Bearer ${oauth2Client.credentials.access_token}`,
+                },
+            });
+            if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
+                const Content = bizSdk.Content
+                const CustomData = bizSdk.CustomData
+                const EventRequest = bizSdk.EventRequest
+                const UserData = bizSdk.UserData
+                const ServerEvent = bizSdk.ServerEvent
+                const access_token = integrations.apiToken
+                const pixel_id = integrations.apiPixelId
+                const api = bizSdk.FacebookAdsApi.init(access_token)
+                let current_timestamp = Math.floor(new Date() / 1000)
+                const userData = (new UserData())
+                    .setFirstName(req.body.firstName)
+                    .setLastName(req.body.lastName)
+                    .setEmail(req.body.email)
+                    .setPhone(req.body.phone && req.body.phone !== '' ? `56${req.body.phone}` : undefined)
+                    .setClientIpAddress(req.connection.remoteAddress)
+                    .setClientUserAgent(req.headers['user-agent'])
+                    .setFbp(req.body.fbp)
+                    .setFbc(req.body.fbc)
+                const content = (new Content())
+                    .setId(req.body.service)
+                    .setQuantity(1)
+                    .setItemPrice(req.body.price && req.body.price !== '' ? Number(req.body.price) : undefined)
+                const customData = (new CustomData())
+                    .setContentName(req.body.meeting)
+                    .setContents([content])
+                    .setCurrency('clp')
+                    .setValue(req.body.price && req.body.price !== '' ? Number(req.body.price) : undefined)
+                const serverEvent = (new ServerEvent())
+                    .setEventId(req.body.eventId)
+                    .setEventName('Schedule')
+                    .setEventTime(current_timestamp)
+                    .setUserData(userData)
+                    .setCustomData(customData)
+                    .setEventSourceUrl(`${domain.domain === 'upviser.cl' ? process.env.WEB_URL : `https://${domain.domain}`}${req.body.page}`)
+                    .setActionSource('website')
+                const eventsData = [serverEvent];
+                const eventRequest = (new EventRequest(access_token, pixel_id))
+                    .setEvents(eventsData)
+                eventRequest.execute().then(
+                    response => {
+                        console.log('Response: ', response)
+                    },
+                    err => {
+                        console.error('Error: ', err)
+                    }
+                )
+            }
+            const newMeeting = new Meeting({...req.body, url: response.data.meetingUri, tenantId})
+            const newMeetingSave = await newMeeting.save()
+            const client = await Client.findOne({ email: req.body.email })
+            if (client) {
+                await axios.post(`${process.env.API_URL}/clients`, req.body)
+            } else {
+                const newClient = new Client({...req.body, tenantId})
+                await newClient.save()
+            }
+            res.json(newMeetingSave)
+            const clientData = await ClientData.find({ tenantId }).lean()
+            const storeData = await StoreData.find({ tenantId }).lean()
+            const style = await Style.find({ tenantId }).lean()
+            const date = moment.tz(req.body.date, 'America/Santiago')
+            await sendEmailBrevo({ tenantId, subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu llamada ha sido agendada con exito`, title: 'Hemos agendado tu llamada exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu llamada con fecha ${date.date()}/${date.month() + 1}/${date.year()} a las ${date.hours()}:${date.minutes() >= 9 ? date.minutes() : `0${date.minutes()}`} ha sido agendada con exito, aqui te dejamos el acceso a la llamada en el siguiente boton, para cualquier consulta comunicate con nostros a traves de nuestro Whatsapp +56${storeData[0].phone}.`, buttonText: 'Ingresar a la llamada', url: response.data.meetingUri }, clientData: clientData, storeData: storeData[0], style: style[0] })
         } else {
             const integrations = await Integrations.findOne({ tenantId }).lean()
             const domain = await Domain.findOne({ tenantId }).lean()
@@ -224,9 +322,8 @@ export const CreateMeeting = async (req, res) => {
             const clientData = await ClientData.find({ tenantId }).lean()
             const storeData = await StoreData.find({ tenantId }).lean()
             const style = await Style.find({ tenantId }).lean()
-            const fechaUtc = moment.utc(req.body.date); // Interpretar como UTC
-            const fechaLocal = fechaUtc.tz("America/Santiago")
-            await sendEmailBrevo({ tenantId, subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu visita ha sido agendada con exito`, title: 'Hemos agendado tu visita exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu visita con fecha ${fechaLocal.date()}/${fechaLocal.month() + 1}/${fechaLocal.year()} a las ${fechaLocal.format("HH:mm")} ha sido agendada con exito, la visita sera en ${req.body.type === 'Visita a domicilio' ? `${req.body.address}, ${req.body.city}, ${req.body.region}.` : `${storeData[0].address}, ${storeData[0].city}, ${storeData[0].region}.`} Para cualquier consulta comunicate con nosotros a través de nuestro Whatsapp.`, buttonText: 'Hablar por Whatsapp', url: `https://wa.me/+56${storeData[0].phone}` }, clientData: clientData, storeData: storeData[0], style: style[0] })
+            const date = moment.tz(req.body.date, 'America/Santiago')
+            await sendEmailBrevo({ tenantId, subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu visita ha sido agendada con exito`, title: 'Hemos agendado tu visita exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu visita con fecha ${date.date()}/${date.month() + 1}/${date.year()} a las ${date.hours()}:${date.minutes() >= 9 ? date.minutes() : `0${date.minutes()}`} ha sido agendada con exito, la visita sera en ${req.body.type === 'Visita a domicilio' ? `${req.body.address}, ${req.body.city}, ${req.body.region}.` : `${storeData[0].address}, ${storeData[0].city}, ${storeData[0].region}.`} Para cualquier consulta comunicate con nosotros a través de nuestro Whatsapp.`, buttonText: 'Hablar por Whatsapp', url: `https://wa.me/+56${storeData[0].phone}` }, clientData: clientData, storeData: storeData[0], style: style[0] })
         }
     } catch (error) {
         console.log(error)
