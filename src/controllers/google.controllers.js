@@ -31,15 +31,13 @@ export const googleAuthCallback = async (req, res) => {
     try {
         const { tokens } = await oauth2Client.getToken(req.query.code)
 
-        console.log(tokens)
-
         const tenant = await Tenant.findOne({ googleState: req.query.state }).lean()
 
         if (tenant) {
             const tenantId = tenant.tenantId
             const integration = await Integrations.findOne({ tenantId }).lean()
             if (integration) {
-                await Integrations.findByIdAndUpdate(integration._id, { googleToken: tokens.access_token, googleRefreshToken: tokens.refresh_token, googleExpird: tokens.expiry_date })
+                await Integrations.findByIdAndUpdate(integration._id, { googleToken: tokens.access_token, googleRefreshToken: tokens.refresh_token, googleExpired: tokens.expiry_date })
             } else {
                 const newIntegration = new Integrations({ tenantId, googleToken: tokens.access_token, googleRefreshToken: tokens.refresh_token, googleExpired: tokens.expiry_date })
                 await newIntegration.save()
