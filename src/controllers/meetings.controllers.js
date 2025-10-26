@@ -194,7 +194,7 @@ export const CreateMeeting = async (req, res) => {
                 const prueba2 = oauth2Client.setCredentials(updated);
                 console.log(prueba2)
             }
-            const response = await axios.post('https://meet.googleapis.com/v1/meetings', {
+            const response = await axios.post('https://meet.googleapis.com/v2/spaces', {
                     requestId: `req-${Date.now()}`,
                 }, {
                 headers: {
