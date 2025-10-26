@@ -39,7 +39,7 @@ export const googleAuthCallback = async (req, res) => {
             if (integration) {
                 await Integrations.findByIdAndUpdate(integration._id, { googleToken: tokens.access_token, googleRefreshToken: tokens.refresh_token, googleExpird: tokens.expiry_date })
             } else {
-                const newIntegration = new Integrations({ googleToken: tokens.access_token, googleRefreshToken: tokens.refresh_token, googleExpird: tokens.expiry_date })
+                const newIntegration = new Integrations({ tenantId, googleToken: tokens.access_token, googleRefreshToken: tokens.refresh_token, googleExpird: tokens.expiry_date })
                 await newIntegration.save()
             }
         }
