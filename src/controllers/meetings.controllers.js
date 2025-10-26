@@ -336,7 +336,7 @@ export const CreateMeeting = async (req, res) => {
             await sendEmailBrevo({ tenantId, subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu visita ha sido agendada con exito`, title: 'Hemos agendado tu visita exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu visita con fecha ${date.date()}/${date.month() + 1}/${date.year()} a las ${date.hours()}:${date.minutes() >= 9 ? date.minutes() : `0${date.minutes()}`} ha sido agendada con exito, la visita sera en ${req.body.type === 'Visita a domicilio' ? `${req.body.address}, ${req.body.city}, ${req.body.region}.` : `${storeData[0].address}, ${storeData[0].city}, ${storeData[0].region}.`} Para cualquier consulta comunicate con nosotros a través de nuestro Whatsapp.`, buttonText: 'Hablar por Whatsapp', url: `https://wa.me/+56${storeData[0].phone}` }, clientData: clientData, storeData: storeData[0], style: style[0] })
         }
     } catch (error) {
-        console.log(error)
+        console.log(error.response)
         return res.status(500).json({message: error.message})
     }
 }
