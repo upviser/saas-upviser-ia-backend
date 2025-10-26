@@ -18,7 +18,7 @@ export const googleAuth = async (req, res) => {
             access_type: "offline",
             prompt: "consent",
             scope: scopes,
-            state: req.body.state,
+            state: req.query.state,
         });
 
         res.redirect(url);
