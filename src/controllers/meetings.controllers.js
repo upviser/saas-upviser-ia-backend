@@ -78,20 +78,39 @@ export const CreateMeeting = async (req, res) => {
             const integrations = await Integrations.findOne({ tenantId }).lean()
             const domain = await Domain.findOne({ tenantId }).lean()
             let token
-            if (isTokenExpired(integrations.zoomCreateToken, integrations.zoomExpiresIn)) {
-                const response = await axios.post('https://zoom.us/oauth/token', qs.stringify({
-                    grant_type: 'refresh_token',
-                    refresh_token: integrations.zoomRefreshToken
-                }), {
-                    headers: {
-                        'Authorization': `Basic ${Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64')}`,
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                })
-                token = response.data.access_token
-                await Integrations.findByIdAndUpdate(integrations._id, { zoomToken: token, zoomRefreshToken: response.data.refresh_token, zoomExpiresIn: response.data.expires_in, zoomCreateToken: new Date() }, { new: true })
+            if (integrations.zoomCreateToken && integrations.zoomCreateToken !== '' && integrations.zoomExpiresIn && integrations.zoomExpiresIn !== '') {
+                if (isTokenExpired(integrations.zoomCreateToken, integrations.zoomExpiresIn)) {
+                    const response = await axios.post('https://zoom.us/oauth/token', qs.stringify({
+                        grant_type: 'refresh_token',
+                        refresh_token: integrations.zoomRefreshToken
+                    }), {
+                        headers: {
+                            'Authorization': `Basic ${Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64')}`,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    })
+                    token = response.data.access_token
+                    await Integrations.findByIdAndUpdate(integrations._id, { zoomToken: token, zoomRefreshToken: response.data.refresh_token, zoomExpiresIn: response.data.expires_in, zoomCreateToken: new Date() }, { new: true })
+                } else {
+                    token = integrations.zoomToken
+                }
             } else {
-                token = integrations.zoomToken
+                const integrationsMain = await Integrations.findOne({ tenantId: process.env.MAIN_TENANT_ID })
+                if (isTokenExpired(integrationsMain.zoomCreateToken, integrationsMain.zoomExpiresIn)) {
+                    const response = await axios.post('https://zoom.us/oauth/token', qs.stringify({
+                        grant_type: 'refresh_token',
+                        refresh_token: integrationsMain.zoomRefreshToken
+                    }), {
+                        headers: {
+                            'Authorization': `Basic ${Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64')}`,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    })
+                    token = response.data.access_token
+                    await Integrations.findByIdAndUpdate(integrationsMain._id, { zoomToken: token, zoomRefreshToken: response.data.refresh_token, zoomExpiresIn: response.data.expires_in, zoomCreateToken: new Date() }, { new: true })
+                } else {
+                    token = integrations.zoomToken
+                }
             }
             const meetingData = {
                 topic: req.body.call,
@@ -170,27 +189,53 @@ export const CreateMeeting = async (req, res) => {
         } else if (req.body.type === 'Llamada por Google Meet') {
             const integrations = await Integrations.findOne({ tenantId }).lean()
             const domain = await Domain.findOne({ tenantId }).lean()
-            const prueba = oauth2Client.setCredentials({
-                access_token: integrations.googleToken,
-                refresh_token: integrations.googleRefreshToken,
-                expiry_date: integrations.googleExpired,
-            })
-            const currentTime = Date.now();
-            if (integrations.googleExpired && integrations.googleExpired < currentTime) {
-                const newTokens = await oauth2Client.refreshAccessToken();
-                const updated = newTokens.credentials;
-                await Integrations.findByIdAndUpdate(integrations._id, {
-                    googleToken: updated.access_token,
-                    googleRefreshToken: updated.refresh_token || integrations.googleRefreshToken,
-                    googleExpiryDate: updated.expiry_date,
+            let response
+            if (integrations.googleToken && integrations.googleToken !== '' && integrations.googleRefreshToken && integrations.googleRefreshToken !== '' && integrations.googleExpired && integrations.googleExpired !== '') {
+                oauth2Client.setCredentials({
+                    access_token: integrations.googleToken,
+                    refresh_token: integrations.googleRefreshToken,
+                    expiry_date: integrations.googleExpired,
+                })
+                const currentTime = Date.now();
+                if (integrations.googleExpired && integrations.googleExpired < currentTime) {
+                    const newTokens = await oauth2Client.refreshAccessToken();
+                    const updated = newTokens.credentials;
+                    await Integrations.findByIdAndUpdate(integrations._id, {
+                        googleToken: updated.access_token,
+                        googleRefreshToken: updated.refresh_token || integrations.googleRefreshToken,
+                        googleExpiryDate: updated.expiry_date,
+                    });
+                    oauth2Client.setCredentials(updated);
+                }
+                response = await axios.post('https://meet.googleapis.com/v2/spaces', {}, {
+                    headers: {
+                        'Authorization': `Bearer ${oauth2Client.credentials.access_token}`,
+                    },
                 });
-                oauth2Client.setCredentials(updated);
+            } else {
+                const integrationsMain = await Integrations.findOne({ tenantId: process.env.MAIN_TENANT_ID })
+                oauth2Client.setCredentials({
+                    access_token: integrationsMain.googleToken,
+                    refresh_token: integrationsMain.googleRefreshToken,
+                    expiry_date: integrationsMain.googleExpired,
+                })
+                const currentTime = Date.now();
+                if (integrationsMain.googleExpired && integrationsMain.googleExpired < currentTime) {
+                    const newTokens = await oauth2Client.refreshAccessToken();
+                    const updated = newTokens.credentials;
+                    await Integrations.findByIdAndUpdate(integrationsMain._id, {
+                        googleToken: updated.access_token,
+                        googleRefreshToken: updated.refresh_token || integrations.googleRefreshToken,
+                        googleExpiryDate: updated.expiry_date,
+                    });
+                    oauth2Client.setCredentials(updated);
+                }
+                response = await axios.post('https://meet.googleapis.com/v2/spaces', {}, {
+                    headers: {
+                        'Authorization': `Bearer ${oauth2Client.credentials.access_token}`,
+                    },
+                });
             }
-            const response = await axios.post('https://meet.googleapis.com/v2/spaces', {}, {
-                headers: {
-                    'Authorization': `Bearer ${oauth2Client.credentials.access_token}`,
-                },
-            });
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
