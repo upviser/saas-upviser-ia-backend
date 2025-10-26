@@ -168,17 +168,22 @@ export const CreateMeeting = async (req, res) => {
             const date = moment.tz(req.body.date, 'America/Santiago')
             await sendEmailBrevo({ tenantId, subscribers: [{ name: req.body.firstName, email: req.body.email }], emailData: { affair: `¡Hola ${req.body.firstName}! Tu llamada ha sido agendada con exito`, title: 'Hemos agendado tu llamada exitosamente', paragraph: `¡Hola ${req.body.firstName}! Te queriamos informar que tu llamada con fecha ${date.date()}/${date.month() + 1}/${date.year()} a las ${date.hours()}:${date.minutes() >= 9 ? date.minutes() : `0${date.minutes()}`} ha sido agendada con exito, aqui te dejamos el acceso a la llamada en el siguiente boton, para cualquier consulta comunicate con nostros a traves de nuestro Whatsapp +56${storeData[0].phone}.`, buttonText: 'Ingresar a la llamada', url: meetingResponse.data.start_url }, clientData: clientData, storeData: storeData[0], style: style[0] })
         } else if (req.body.type === 'Llamada por Google Meet') {
+            console.log('meet')
             const integrations = await Integrations.findOne({ tenantId }).lean()
             const domain = await Domain.findOne({ tenantId }).lean()
-            oauth2Client.setCredentials({
+            const prueba = oauth2Client.setCredentials({
                 access_token: integrations.googleToken,
                 refresh_token: integrations.googleRefreshToken,
                 expiry_date: integrations.googleExpired,
             })
+            console.log(prueba)
             const currentTime = Date.now();
             if (integrations.googleExpired && integrations.googleExpired < currentTime) {
+                console.log('token expirado')
                 const newTokens = await oauth2Client.refreshAccessToken();
+                console.log(newTokens)
                 const updated = newTokens.credentials;
+                console.log(updated)
 
                 await Integrations.findByIdAndUpdate(integrations._id, {
                     googleToken: updated.access_token,
@@ -186,7 +191,8 @@ export const CreateMeeting = async (req, res) => {
                     googleExpiryDate: updated.expiry_date,
                 });
 
-                oauth2Client.setCredentials(updated);
+                const prueba2 = oauth2Client.setCredentials(updated);
+                console.log(prueba2)
             }
             const response = await axios.post('https://meet.googleapis.com/v1/meetings', {
                     requestId: `req-${Date.now()}`,
@@ -195,6 +201,7 @@ export const CreateMeeting = async (req, res) => {
                     'Authorization': `Bearer ${oauth2Client.credentials.access_token}`,
                 },
             });
+            console.log(response)
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
