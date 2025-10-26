@@ -17,7 +17,10 @@ const IntegrationsSchema = new mongoose.Schema({
     zoomToken: { type: String },
     zoomRefreshToken: { type: String },
     zoomExpiresIn: { type: Number },
-    zoomCreateToken: { type: Date }
+    zoomCreateToken: { type: Date },
+    googleToken: { type: String },
+    googleRefreshToken: { type: String },
+    googleExpired: { type: String }
 }, {
     timestamps: true
 })

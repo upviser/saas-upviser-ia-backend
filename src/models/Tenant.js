@@ -6,7 +6,8 @@ const TenantSchema = new mongoose.Schema({
     instagramState: { type: String },
     instagramId: { type: String },
     messengerId: { type: String },
-    whatsappId: { type: String }
+    whatsappId: { type: String },
+    googleState: { type: String }
 }, {
     timestamps: true
 })

@@ -62,6 +62,7 @@ import notificationRoutes from './routes/notifications.routes.js'
 import cartRoutes from './routes/cart.routes.js'
 import DomainRoutes from './routes/domain.routes.js'
 import TenantRoutes from './routes/tenants.routes.js'
+import GoogleRoutes from './routes/google.routes.js'
 
 connectDB()
 
@@ -221,6 +222,7 @@ app.use(notificationRoutes)
 app.use(cartRoutes)
 app.use(DomainRoutes)
 app.use(TenantRoutes)
+app.use(GoogleRoutes)
 
 io.on('connection', async (socket) => {
     socket.on('message', async (message) => {
