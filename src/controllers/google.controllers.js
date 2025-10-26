@@ -1,6 +1,6 @@
 import { OAuth2Client } from 'google-auth-library'
-import Tenant from '../models/Tenant';
-import Integrations from '../models/Integrations';
+import Tenant from '../models/Tenant.js';
+import Integrations from '../models/Integrations.js';
 
 export const googleAuth = async (req, res) => {
     try {
@@ -49,7 +49,7 @@ export const googleAuthCallback = async (req, res) => {
                 await newIntegration.save()
             }
         }
-        
+
         return res.redirect(`${process.env.ADMIN_URL}/google-oauth-success?status=ok`)
     } catch (error) {
         return res.status(500).json({message: error.message})
