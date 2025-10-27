@@ -277,7 +277,7 @@ Devuelve 2 cosas en JSON:
                         dimentions: product.dimentions || ''
                     };
                 }).filter(Boolean);
-                const newMessage = new ChatMessage({tenantId, senderId: senderId, message: message, response: act.output_parsed.message, agent: false, adminView: false, userView: true, tag: 'Productos'})
+                const newMessage = new ChatMessage({tenantId, senderId: senderId, message: message, response: act.output_parsed.message, agent: true, adminView: false, userView: true, tag: 'Productos'})
                 const newMessageSave = await newMessage.save()
                 return res.send({ ...newMessageSave.toObject(), cart: enrichedCart })
             }
