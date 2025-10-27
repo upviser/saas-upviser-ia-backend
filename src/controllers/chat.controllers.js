@@ -304,7 +304,7 @@ Devuelve 2 cosas en JSON:
                 io.emit('newNotification')
                 return res.send(newMessage)
             }
-            if (information.length < 20) {
+            if (information.length > 20) {
                 const response = await openai.chat.completions.create({
                     model: "gpt-4o-mini",
                     messages: [
