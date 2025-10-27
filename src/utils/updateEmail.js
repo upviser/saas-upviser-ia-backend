@@ -8,10 +8,7 @@ export const updateClientEmailStatus = async (email, emailData, tenantId) => {
 };
 
 export const updateClientEmailStatusById = async (email, emailId, updateData) => {
-    console.log(email)
-    console.log(emailId)
-    const client = await Client.findOne({ email, 'emails.id': emailId }).lean()
-    console.log(client)
+    const client = await Client.findOne({ email, 'emails.id': emailId })
     let emailUpdate = client.emails.find(email => email.id === emailId)
     if (updateData === 'unique_opened') {
         emailUpdate.opened = true
