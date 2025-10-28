@@ -361,7 +361,8 @@ export const getIds = async (req, res) => {
                     _id: 0,
                     senderId: 1,
                     agent: 1,
-                    view: 1,
+                    adminView: 1,
+                    userView: 1,
                     createdAt: 1,
                     tag: 1,
                     message: 1
