@@ -45,7 +45,7 @@ const DesignSchema = new mongoose.Schema({
     categoryPage: [{ design: [{ content: { type: String }, info: { banner: [{ title: { type: String }, description: { type: String }, button: { type: String }, buttonLink: { type: String }, url: { type: String }, image: { type: String } }], title: { type: String }, subTitle: { type: String }, description: { type: String }, image: { public_id: { type: String }, url: { type: String } }, titleForm: { type: String }, button: { type: String }, buttonLink: { type: String }, subTitle2: { type: String }, description2: { type: String }, button2: { type: String }, buttonLink2: { type: String }, subTitle3: { type: String }, description3: { type: String }, button3: { type: String }, buttonLink3: { type: String }, descriptionView: { type: Boolean }, products: { type: String } } }] }],
     cartPage: { bgColor: { type: String }, textColor: { type: String }, detailsColor: { type: String } },
     checkoutPage: { bgColor: { type: String }, textColor: { type: String }, detailsColor: { type: String } },
-    popup: { active: { type: Boolean }, wait: { type: Number }, title: { type: String }, description: { type: String }, content: { type: String }, buttonText: { type: String }, buttonLink: { type: String }, bgColor: { type: String }, textColor: { type: string } },
+    popup: { active: { type: Boolean }, wait: { type: Number }, title: { type: String }, description: { type: String }, content: { type: String }, buttonText: { type: String }, buttonLink: { type: String }, bgColor: { type: String }, textColor: { type: String } },
     whatsapp: { type: Boolean },
     instagram: { type: Boolean },
     chatView: { type: Boolean }
