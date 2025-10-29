@@ -114,33 +114,33 @@ cron.schedule("0 0 * * *", async () => {
             const diffSubscription = Math.floor((now - dateSubscription) / (1000 * 60 * 60 * 24)) // en días
 
             // Si han pasado más de 3 días desde creado y aún no tiene subscription activa
-            if (diffCreated > 3 && !account.subscription) {
+            if (diffCreated > 3 && !account.subscription && account.tenantId !== process.env.MAIN_TENANT_ID) {
                 updates.state = false
             }
 
             // Si tiene suscripción activa y ha pasado 1 mes (30 días) desde la última renovación
-            if (account.subscription && diffSubscription >= 30) {
+            if (account.subscription && diffSubscription >= 30 && account.tenantId !== process.env.MAIN_TENANT_ID) {
                 // Aplicar el plan correspondiente
                 switch (account.plan) {
                     case 'Esencial':
                         updates.emails = 1500
                         updates.textAI = 100
-                        updates.imagesAI = 20
-                        updates.videosAI = 0
+                        updates.imagesAI = 40
+                        updates.videosAI = 15
                         updates.conversationsAI = 250
                         break
                     case 'Avanzado':
                         updates.emails = 3500
                         updates.textAI = 200
-                        updates.imagesAI = 40
-                        updates.videosAI = 15
+                        updates.imagesAI = 80
+                        updates.videosAI = 30
                         updates.conversationsAI = 600
                         break
                     case 'Profesional':
                         updates.emails = 6000
                         updates.textAI = 400
-                        updates.imagesAI = 80
-                        updates.videosAI = 30
+                        updates.imagesAI = 160
+                        updates.videosAI = 60
                         updates.conversationsAI = 1500
                         break
                     default:
