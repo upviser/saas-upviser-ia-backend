@@ -9,6 +9,7 @@ import Task from '../models/Task.js'
 import Style from '../models/Style.js'
 import Account from '../models/Account.js'
 import bcrypt from 'bcryptjs'
+import Service from '../models/Service.js'
 
 export const createClient = async (req, res) => {
   try {
@@ -52,6 +53,7 @@ export const createClient = async (req, res) => {
 
       const editClient = await Client.findByIdAndUpdate(client._id, updatedClient, { new: true });
       const automatizations = await Automatization.find().lean();
+      const services = await Service.find({ tenantId }).lean()
 
       const automatizationsClient = automatizations.filter(automatization => {
         switch (automatization.startType) {
@@ -60,7 +62,8 @@ export const createClient = async (req, res) => {
           case 'Llamada agendada':
             return (req.body.meetings || []).some(meeting => meeting.meeting === automatization.startValue);
           case 'Ingreso a un servicio':
-            return (req.body.services || []).some(service => service.service === automatization.startValue && service.step && service.step !== '' && client.services.find(service => service.step ? req.body.services[0].step === service.step : true));
+            const service = services.find(service => service._id === req.body.services[0].service)
+            return (req.body.services || []).some(ser => ser.service === automatization.startValue && ser.step && ser.step === service.steps[0]._id);
           case 'Añadido a una etapa de un embudo':
             return (req.body.funnels || []).some(funnel => funnel.step === automatization.startValue);
           case 'Añadido a una etapa de un servicio':
@@ -143,6 +146,7 @@ export const createClient = async (req, res) => {
       const newClient = new Client({...req.body, tenantId});
       const newClientSave = await newClient.save();
       const automatizations = await Automatization.find({ tenantId }).lean();
+      const services = await Service.find({ tenantId }).lean()
 
       const automatizationsClient = automatizations.filter(automatization => {
         switch (automatization.startType) {
@@ -151,7 +155,8 @@ export const createClient = async (req, res) => {
           case 'Llamada agendada':
             return (req.body.meetings || []).some(meeting => meeting.meeting === automatization.startValue);
           case 'Ingreso a un servicio':
-            return (req.body.services || []).some(service => service.service === automatization.startValue && service.step && service.step !== '');
+            const service = services.find(service => service._id === req.body.services[0].service)
+            return (req.body.services || []).some(ser => ser.service === automatization.startValue && ser.step && ser.step === service.steps[0]._id);
           case 'Añadido a una etapa de un embudo':
             return (req.body.funnels || []).some(funnel => funnel.step === automatization.startValue);
           case 'Añadido a una etapa de un servicio':
