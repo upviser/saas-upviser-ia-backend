@@ -21,8 +21,8 @@ export const getStadistics = async (req, res) => {
         const meetings = await Meeting.find({ tenantId })
         const informations = await Information.find({ tenantId })
         const checkouts = await Checkout.find({ tenantId })
-        const pays = await Pay.find({ tenantId })
-        const sells = await Sell.find({ tenantId })
+        const pays = await Pay.find({ tenantId, state: 'Pago realizado' })
+        const sells = await Sell.find({ tenantId, state: 'Pago realizado' })
         const clients = await Client.find({ tenantId })
         return res.json({ pages, sessions, viewContents, addCarts, leads, meetings, informations, checkouts, pays, sells, clients })
     } catch (error) {
@@ -44,8 +44,8 @@ export const getStadisticsFiltered = async (req, res) => {
         const meetings = await Meeting.find({ tenantId, createdAt: { $gte: dateInitialFormat, $lte: dateLastFormat } })
         const informations = await Information.find({ tenantId, createdAt: { $gte: dateInitialFormat, $lte: dateLastFormat } })
         const checkouts = await Checkout.find({ tenantId, createdAt: { $gte: dateInitialFormat, $lte: dateLastFormat } })
-        const pays = await Pay.find({ tenantId, createdAt: { $gte: dateInitialFormat, $lte: dateLastFormat } })
-        const sells = await Sell.find({ tenantId, createdAt: { $gte: dateInitialFormat, $lte: dateLastFormat } })
+        const pays = await Pay.find({ tenantId, state: 'Pago realizado', createdAt: { $gte: dateInitialFormat, $lte: dateLastFormat } })
+        const sells = await Sell.find({ tenantId, state: 'Pago realizado', createdAt: { $gte: dateInitialFormat, $lte: dateLastFormat } })
         const clients = await Client.find({ tenantId, createdAt: { $gte: dateInitialFormat, $lte: dateLastFormat } })
         return res.json({ pages, sessions, viewContents, addCarts, leads, meetings, informations, checkouts, pays, sells, clients })
     } catch (error) {
