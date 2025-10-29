@@ -189,9 +189,9 @@ export const createClient = async (req, res) => {
               (email.condition.length === 0 && !newClient.tags.includes('desuscrito')) ||
               (email.condition.some(tag => !newClient.tags.includes(tag) || !newClient.tags.includes('desuscrito')))
             ) {
-              const clientData = await ClientData.find();
-              const storeData = await StoreData.find();
-              const style = await Style.findOne()
+              const clientData = await ClientData.find({ tenantId });
+              const storeData = await StoreData.find({ tenantId });
+              const style = await Style.findOne({ tenantId })
               sendEmailBrevo({ tenantId, subscribers: [newClientSave], emailData: email, storeData: storeData[0], clientData: clientData, automatizationId: automatization._id, style: style });
             }
           } else {
