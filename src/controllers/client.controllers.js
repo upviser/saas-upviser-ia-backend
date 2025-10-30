@@ -66,7 +66,7 @@ export const createClient = async (req, res) => {
           case 'Llamada agendada':
             return (req.body.meetings || []).some(meeting => meeting.meeting === automatization.startValue);
           case 'Ingreso a un servicio':
-            return (req.body.services || []).some(ser => ser.service === 'asd');
+            return (req.body.services || []).some(ser => ser.step === service.steps[0]._id);
           case 'Añadido a una etapa de un embudo':
             return (req.body.funnels || []).some(funnel => funnel.step === automatization.startValue);
           case 'Añadido a una etapa de un servicio':
