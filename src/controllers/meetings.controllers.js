@@ -118,13 +118,11 @@ export const CreateMeeting = async (req, res) => {
                 start_time: moment.tz(req.body.date, 'America/Santiago').format(),
                 duration: req.body.duration
             }
-            console.log(meetingData)
             const meetingResponse = await axios.post(`https://api.zoom.us/v2/users/me/meetings`, meetingData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
             })
-            console.log(meetingResponse?.data ? meetingResponse.data : 'error peticion creacion reunion')
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
@@ -175,13 +173,9 @@ export const CreateMeeting = async (req, res) => {
             }
             const newMeeting = new Meeting({ ...req.body, url: meetingResponse.data.start_url, tenantId})
             const newMeetingSave = await newMeeting.save()
-            const client = await Client.findOne({ email: req.body.email })
-            if (client) {
-                await axios.post(`${process.env.API_URL}/clients`, req.body)
-            } else {
-                const newClient = new Client({...req.body, tenantId})
-                await newClient.save()
-            }
+            await axios.post(`${process.env.API_URL}/clients`, req.body, {
+                'x-tenant-id': tenantId
+            })
             res.json(newMeetingSave)
             const clientData = await ClientData.find({ tenantId }).lean()
             const storeData = await StoreData.find({ tenantId }).lean()
@@ -288,17 +282,11 @@ export const CreateMeeting = async (req, res) => {
             }
             const newMeeting = new Meeting({...req.body, url: response.data.meetingUri, tenantId})
             const newMeetingSave = await newMeeting.save()
-            const client = await Client.findOne({ email: req.body.email })
-            if (client) {
-                await axios.post(`${process.env.API_URL}/clients`, req.body, {
-                    headers: {
-                        'x-tenant-id': tenantId
-                    }
-                })
-            } else {
-                const newClient = new Client({...req.body, tenantId})
-                await newClient.save()
-            }
+            await axios.post(`${process.env.API_URL}/clients`, req.body, {
+                headers: {
+                    'x-tenant-id': tenantId
+                }
+            })
             res.json(newMeetingSave)
             const clientData = await ClientData.find({ tenantId }).lean()
             const storeData = await StoreData.find({ tenantId }).lean()
@@ -358,13 +346,11 @@ export const CreateMeeting = async (req, res) => {
             }
             const newMeeting = new Meeting({...req.body, tenantId})
             const newMeetingSave = await newMeeting.save()
-            const client = await Client.findOne({ email: req.body.email })
-            if (client) {
-                await axios.post(`${process.env.API_URL}/clients`, req.body)
-            } else {
-                const newClient = new Client({...req.body, tenantId})
-                await newClient.save()
-            }
+            await axios.post(`${process.env.API_URL}/clients`, req.body, {
+                headers: {
+                    'x-tenant-id': tenantId
+                }
+            })
             res.json(newMeetingSave)
             const clientData = await ClientData.find({ tenantId }).lean()
             const storeData = await StoreData.find({ tenantId }).lean()
