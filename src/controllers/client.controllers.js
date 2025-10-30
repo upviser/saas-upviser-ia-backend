@@ -70,7 +70,7 @@ export const createClient = async (req, res) => {
           case 'Añadido a una etapa de un embudo':
             return (req.body.funnels || []).some(funnel => funnel.step === automatization.startValue);
           case 'Añadido a una etapa de un servicio':
-            return (req.body.services || []).some(service => service.step === automatization.startValue);
+            return (req.body.services || []).some(service => service.step.toString() === automatization.startValue.toString());
           case 'Tag añadido':
             return (req.body.tags || []).includes(automatization.startValue);
           default:
