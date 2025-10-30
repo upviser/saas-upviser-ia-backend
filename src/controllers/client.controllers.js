@@ -57,7 +57,9 @@ export const createClient = async (req, res) => {
       const automatizations = await Automatization.find({ tenantId }).lean();
       console.log(automatizations)
       const services = await Service.find({ tenantId }).lean()
+      console.log(services)
       const service = services.find(service => service._id === req.body.services[0].service)
+      console.log(service)
 
       const automatizationsClient = automatizations.filter(automatization => {
         switch (automatization.startType) {
