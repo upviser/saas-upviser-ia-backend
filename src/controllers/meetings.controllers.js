@@ -173,8 +173,7 @@ export const CreateMeeting = async (req, res) => {
             }
             const newMeeting = new Meeting({ ...req.body, url: meetingResponse.data.start_url, tenantId})
             const newMeetingSave = await newMeeting.save()
-            console.log(req.body)
-            await axios.post(`${process.env.API_URL}/clients`, req.body, {
+            await axios.post(`${process.env.API_URL}/clients`, { firstName: req.body.firstName, email: req.body.email, meetings: req.body.meetings, tags: req.body.tags, services: [{ service: req.body.service && req.body.service !== '' ? req.body.service : '', step: req.body.stepService && req.body.stepService !== '' ? req.body.stepService : '' }] }, {
                 headers: {
                     'x-tenant-id': tenantId
                 }
@@ -285,7 +284,7 @@ export const CreateMeeting = async (req, res) => {
             }
             const newMeeting = new Meeting({...req.body, url: response.data.meetingUri, tenantId})
             const newMeetingSave = await newMeeting.save()
-            await axios.post(`${process.env.API_URL}/clients`, req.body, {
+            await axios.post(`${process.env.API_URL}/clients`, { firstName: req.body.firstName, email: req.body.email, meetings: req.body.meetings, tags: req.body.tags, services: [{ service: req.body.service && req.body.service !== '' ? req.body.service : '', step: req.body.stepService && req.body.stepService !== '' ? req.body.stepService : '' }] }, {
                 headers: {
                     'x-tenant-id': tenantId
                 }
@@ -349,7 +348,7 @@ export const CreateMeeting = async (req, res) => {
             }
             const newMeeting = new Meeting({...req.body, tenantId})
             const newMeetingSave = await newMeeting.save()
-            await axios.post(`${process.env.API_URL}/clients`, req.body, {
+            await axios.post(`${process.env.API_URL}/clients`, { firstName: req.body.firstName, email: req.body.email, meetings: req.body.meetings, tags: req.body.tags, services: [{ service: req.body.service && req.body.service !== '' ? req.body.service : '', step: req.body.stepService && req.body.stepService !== '' ? req.body.stepService : '' }] }, {
                 headers: {
                     'x-tenant-id': tenantId
                 }
