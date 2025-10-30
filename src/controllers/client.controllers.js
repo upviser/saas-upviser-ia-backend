@@ -54,7 +54,7 @@ export const createClient = async (req, res) => {
       };
 
       const editClient = await Client.findByIdAndUpdate(client._id, updatedClient, { new: true });
-      const automatizations = await Automatization.find().lean();
+      const automatizations = await Automatization.find({ tenantId }).lean();
       const services = await Service.find({ tenantId }).lean()
 
       const automatizationsClient = automatizations.filter(automatization => {
