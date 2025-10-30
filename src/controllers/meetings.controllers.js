@@ -174,7 +174,9 @@ export const CreateMeeting = async (req, res) => {
             const newMeeting = new Meeting({ ...req.body, url: meetingResponse.data.start_url, tenantId})
             const newMeetingSave = await newMeeting.save()
             await axios.post(`${process.env.API_URL}/clients`, req.body, {
-                'x-tenant-id': tenantId
+                headers: {
+                    'x-tenant-id': tenantId
+                }
             })
             res.json(newMeetingSave)
             const clientData = await ClientData.find({ tenantId }).lean()
