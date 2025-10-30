@@ -13,6 +13,7 @@ import Service from '../models/Service.js'
 
 export const createClient = async (req, res) => {
   try {
+    console.log(req.body)
     const tenantId = req.headers['x-tenant-id']
     const client = await Client.findOne({ email: req.body.email, tenantId }).lean();
     if (client) {
@@ -40,6 +41,7 @@ export const createClient = async (req, res) => {
             ...(req.body.services || []).filter(newService => !client.services.some(service => service.service === newService.service))
           ]
         : client.services;
+      console.log(updatedServices)
 
       const updatedClient = {
         ...client,
@@ -74,6 +76,7 @@ export const createClient = async (req, res) => {
             return false;
         }
       });
+      console.log(automatizationsClient)
 
       res.send(editClient);
 
