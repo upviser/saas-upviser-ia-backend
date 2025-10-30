@@ -95,8 +95,10 @@ export const CreateMeeting = async (req, res) => {
                     token = integrations.zoomToken
                 }
             } else {
+                console.log('credenciales del saas')
                 const integrationsMain = await Integrations.findOne({ tenantId: process.env.MAIN_TENANT_ID })
                 if (isTokenExpired(integrationsMain.zoomCreateToken, integrationsMain.zoomExpiresIn)) {
+                    console.log('el token expiro')
                     const response = await axios.post('https://zoom.us/oauth/token', qs.stringify({
                         grant_type: 'refresh_token',
                         refresh_token: integrationsMain.zoomRefreshToken
@@ -106,6 +108,7 @@ export const CreateMeeting = async (req, res) => {
                             'Content-Type': 'application/x-www-form-urlencoded'
                         }
                     })
+                    console.log(response?.data ? response.data : 'error peticion post a zoom')
                     token = response.data.access_token
                     await Integrations.findByIdAndUpdate(integrationsMain._id, { zoomToken: token, zoomRefreshToken: response.data.refresh_token, zoomExpiresIn: response.data.expires_in, zoomCreateToken: new Date() }, { new: true })
                 } else {
@@ -118,11 +121,13 @@ export const CreateMeeting = async (req, res) => {
                 start_time: moment.tz(req.body.date, 'America/Santiago').format(),
                 duration: req.body.duration
             }
+            console.log(meetingData)
             const meetingResponse = await axios.post(`https://api.zoom.us/v2/users/me/meetings`, meetingData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
-            }).catch(error => console.log(error))
+            })
+            console.log(meetingResponse?.data ? meetingResponse.data : 'error peticion creacion reunion')
             if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
                 const Content = bizSdk.Content
                 const CustomData = bizSdk.CustomData
