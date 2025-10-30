@@ -58,7 +58,7 @@ export const createClient = async (req, res) => {
       console.log(automatizations)
       const services = await Service.find({ tenantId }).lean()
       console.log(services)
-      const service = services.find(service => service._id === req.body.services[0].service)
+      const service = services.find(service => service._id.toString() === req.body.services[0].service.toString())
       console.log(service)
 
       const automatizationsClient = automatizations.filter(automatization => {
@@ -68,7 +68,7 @@ export const createClient = async (req, res) => {
           case 'Llamada agendada':
             return (req.body.meetings || []).some(meeting => meeting.meeting === automatization.startValue);
           case 'Ingreso a un servicio':
-            return (req.body.services || []).some(ser => ser.step === service.steps[0]._id);
+            return (req.body.services || []).some(ser => ser.step === service?.steps[0]._id);
           case 'Añadido a una etapa de un embudo':
             return (req.body.funnels || []).some(funnel => funnel.step === automatization.startValue);
           case 'Añadido a una etapa de un servicio':
