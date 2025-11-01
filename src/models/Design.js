@@ -16,7 +16,8 @@ const pageSchema = new mongoose.Schema({
     bgColor2: { type: String },
     bgType: { type: String },
     bgAngle: { type: String },
-    bgImage: { type: String }
+    bgImage: { type: String },
+    textColor: { type: String }
 }, {
     timestamps: true
 })
