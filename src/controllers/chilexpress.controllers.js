@@ -8,7 +8,7 @@ export const createChilexpress = async (req, res) => {
             const edit = await Chilexpress.findByIdAndUpdate(chilexpress.id, req.body, { new: true })
             return res.send(edit)
         } else {
-            const create = new Chilexpress(req.body)
+            const create = new Chilexpress({ ...req.body, tenantId })
             const createSave = await create.save()
             return res.send(createSave)
         }
