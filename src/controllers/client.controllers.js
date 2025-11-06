@@ -13,7 +13,6 @@ import Service from '../models/Service.js'
 
 export const createClient = async (req, res) => {
   try {
-    console.log(req.body)
     const tenantId = req.headers['x-tenant-id']
     const client = await Client.findOne({ email: req.body.email, tenantId }).lean();
     if (client) {
@@ -41,7 +40,6 @@ export const createClient = async (req, res) => {
             ...(req.body.services || []).filter(newService => !client.services.some(service => service.service === newService.service))
           ]
         : client.services;
-      console.log(updatedServices)
 
       const updatedClient = {
         ...client,
@@ -55,11 +53,8 @@ export const createClient = async (req, res) => {
 
       const editClient = await Client.findByIdAndUpdate(client._id, updatedClient, { new: true });
       const automatizations = await Automatization.find({ tenantId }).lean();
-      console.log(automatizations)
       const services = await Service.find({ tenantId }).lean()
-      console.log(services)
-      const service = services.find(service => service._id.toString() === req.body.services[0].service.toString())
-      console.log(service)
+      const service = services.find(service => service._id.toString() === req.body.services?.length ? req.body.services[0].service.toString() : '')
 
       const automatizationsClient = automatizations.filter(automatization => {
         switch (automatization.startType) {
@@ -79,7 +74,6 @@ export const createClient = async (req, res) => {
             return false;
         }
       });
-      console.log(automatizationsClient)
 
       res.send(editClient);
 
@@ -153,6 +147,7 @@ export const createClient = async (req, res) => {
       const newClientSave = await newClient.save();
       const automatizations = await Automatization.find({ tenantId }).lean();
       const services = await Service.find({ tenantId }).lean()
+      const service = services.find(service => service._id.toString() === req.body.services?.length ? req.body.services[0].service.toString() : '')
 
       const automatizationsClient = automatizations.filter(automatization => {
         switch (automatization.startType) {
@@ -161,7 +156,6 @@ export const createClient = async (req, res) => {
           case 'Llamada agendada':
             return (req.body.meetings || []).some(meeting => meeting.meeting === automatization.startValue);
           case 'Ingreso a un servicio':
-            const service = services.find(service => service._id === req.body.services[0].service)
             return (req.body.services || []).some(ser => ser.service === automatization.startValue && ser.step && ser.step === service.steps[0]._id);
           case 'Añadido a una etapa de un embudo':
             return (req.body.funnels || []).some(funnel => funnel.step === automatization.startValue);
@@ -241,6 +235,7 @@ export const createClient = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error)
     return res.status(500).json({ message: error.message });
   }
 };
