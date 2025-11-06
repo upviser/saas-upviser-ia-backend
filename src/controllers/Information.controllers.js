@@ -9,7 +9,7 @@ export const createInformation = async (req, res) => {
         const { cart, fbp, fbc } = req.body
         const integrations = await Integrations.findOne({ tenantId }).lean()
         const domain = await Domain.findOne({ tenantId }).lean()
-        const nuevoFinalizar = new Information(cart)
+        const nuevoFinalizar = new Information({ cart, tenantId})
         const newInformation = await nuevoFinalizar.save()
         if (integrations && integrations.apiToken && integrations.apiToken !== '' && integrations.apiPixelId && integrations.apiPixelId !== '') {
             const CustomData = bizSdk.CustomData
