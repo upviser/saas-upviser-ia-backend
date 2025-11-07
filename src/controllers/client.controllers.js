@@ -333,7 +333,7 @@ export const createAccount = async (req, res) => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     if (!regex.test(emailLower)) return res.send({ message: 'El email no es valido' })
     if (password.length < 6) return res.send({ message: 'La contraseña tiene que tener minimo 6 caracteres' })
-    const user = await Account.findOne({ email: emailLower })
+    const user = await Account.findOne({ email: emailLower, tenantId })
     if (user) return res.send({ message: 'El email ya esta registrado' })
     const hashedPassword = await bcrypt.hash(password, 12)
     const newAccount = new Account({ tenantId, firstName, lastName, email: emailLower, password: hashedPassword })
