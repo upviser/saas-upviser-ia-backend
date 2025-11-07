@@ -173,7 +173,8 @@ export const createDefaultPages = async (req, res) => {
           cartPage: { bgColor: '#ffffff', textColor: '#111111', detailsColor: '#ffffff' },
           checkoutPage: { bgColor: '#ffffff', textColor: '#111111', detailsColor: '#ffffff' },
           productPage: [{ reviews: true, design: [{ content: 'Carrusel productos' }, { content: 'Suscripción' }] }],
-          categoryPage: [{ design: [{ content: 'Bloque 6' }, { content: 'Categorias 2' }, { content: 'Productos' }, { content: 'Suscripción' }] }]
+          categoryPage: [{ design: [{ content: 'Bloque 6' }, { content: 'Categorias 2' }, { content: 'Productos' }, { content: 'Suscripción' }] }],
+          accountPage: { bgColor: '', textColor: '' }
         })
         const newDesignSave = await newDesign.save()
         const newTag = new ClientTag({ tenantId: req.body.tenantId, tag: 'suscriptores' })
