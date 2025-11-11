@@ -12,6 +12,7 @@ const PaySchema = new mongoose.Schema({
     stepService: { type: String },
     typeService: { type: String },
     typePrice: { type: String },
+    call: { type: String },
     plan: { type: String },
     price: { type: Number },
     state: { type: String },

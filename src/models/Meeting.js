@@ -7,6 +7,7 @@ const MeetingSchema = new mongoose.Schema({
     lastName: { type: String },
     phone: { type: Number },
     meeting: { type: String, required: true },
+    call: { type: String },
     date: { type: Date, required: true },
     url: { type: String },
     data: [{ name: { type: String }, value: { type: String } }],

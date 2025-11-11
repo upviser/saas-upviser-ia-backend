@@ -4,7 +4,7 @@ import { NumberFormat } from '../utils/NumberFormat.js'
 import ShopLogin from '../models/ShopLogin.js'
 import Domain from '../models/Domain.js'
 
-export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services, tenantId }) => {
+export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services, tenantId, call }) => {
 
     let apiInstance = new brevo.TransactionalEmailsApi()
 
@@ -13,7 +13,7 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services,
 
     const id = `email-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-    let service
+    let service = ''
 
     if (pay?.email) {
         service = services.find(service => service._id.toString() === pay.service)
@@ -23,7 +23,7 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services,
 
     let sendSmtpEmail = new brevo.SendSmtpEmail()
     sendSmtpEmail = {
-        sender: { email: domain.email, name: domain.name },
+        sender: { email: `${domain.email.includes('@emails.upviser.cl') ? domain.email : `${domain.email}@${domain.domain}`}`, name: domain.name },
         subject: `¡Hola ${sell?.firstName ? sell.firstName : pay.firstName}! Tu compra ha sido realizada con exito`,
         to: [{
             email: sell?.email ? sell.email : pay.email,
@@ -88,8 +88,22 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services,
                                                         : `
                                                             <tr>
                                                                 <td align="center" style="padding: 20px;">
-                                                                    <p style="margin: 0; padding-bottom: 10px; line-height: 25px; color: #333333; font-size: 16px;">Servicio: ${service?.name}</p>
-                                                                    <br>
+                                                                    ${
+                                                                        call && call !== ''
+                                                                            ? `
+                                                                                <p style="margin: 0; padding-bottom: 10px; line-height: 25px; color: #333333; font-size: 16px;">Servicio: ${call}</p>
+                                                                                <br>
+                                                                            `
+                                                                            : ''
+                                                                    }
+                                                                    ${
+                                                                        service?.name && service.name !== ''
+                                                                            ? `
+                                                                                <p style="margin: 0; padding-bottom: 10px; line-height: 25px; color: #333333; font-size: 16px;">Servicio: ${service?.name}</p>
+                                                                                <br>
+                                                                            `
+                                                                            : ''
+                                                                    }
                                                                     ${
                                                                         pay?.plan && pay.plan !== ''
                                                                             ? `
@@ -98,8 +112,14 @@ export const sendEmailBuyBrevo = async ({ storeData, style, sell, pay, services,
                                                                             `
                                                                             : ''
                                                                     }
-                                                                    <p style="margin: 0; padding-bottom: 10px; line-height: 25px; color: #333333; font-size: 16px;">Modalidad de pago: ${pay.typePrice}</p>
-                                                                    <br>
+                                                                    ${
+                                                                        pay?.typePrice && pay.typePrice !== ''
+                                                                            ? `
+                                                                                <p style="margin: 0; padding-bottom: 10px; line-height: 25px; color: #333333; font-size: 16px;">Modalidad de pago: ${pay.typePrice}</p>
+                                                                                <br>
+                                                                            `
+                                                                            : ''
+                                                                    }
                                                                     <p style="margin: 0; padding-bottom: 10px; line-height: 25px; color: #333333; font-size: 16px;">Precio total: $${NumberFormat(Number(pay.price))}</p>
                                                                 </td>
                                                             </tr>

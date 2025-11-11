@@ -63,7 +63,7 @@ export const createClient = async (req, res) => {
           case 'Llamada agendada':
             return (req.body.meetings || []).some(meeting => meeting.meeting === automatization.startValue);
           case 'Ingreso a un servicio':
-            return (req.body.services || []).some(ser => ser.step.toString() === service?.steps[0]._id.toString());
+            return (req.body.services || []).some(ser => ser.step.toString() === service?.steps.length ? service?.steps[0]._id.toString() : '');
           case 'Añadido a una etapa de un embudo':
             return (req.body.funnels || []).some(funnel => funnel.step === automatization.startValue);
           case 'Añadido a una etapa de un servicio':
@@ -156,7 +156,7 @@ export const createClient = async (req, res) => {
           case 'Llamada agendada':
             return (req.body.meetings || []).some(meeting => meeting.meeting === automatization.startValue);
           case 'Ingreso a un servicio':
-            return (req.body.services || []).some(ser => ser.service === automatization.startValue && ser.step && ser.step === service.steps[0]._id);
+            return (req.body.services || []).some(ser => ser.step.toString() === service?.steps.length ? service?.steps[0]._id.toString() : '');
           case 'Añadido a una etapa de un embudo':
             return (req.body.funnels || []).some(funnel => funnel.step === automatization.startValue);
           case 'Añadido a una etapa de un servicio':

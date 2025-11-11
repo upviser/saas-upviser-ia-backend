@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 const CallSchema = new mongoose.Schema({
     tenantId: { type: String, required: true },
     type: [{ type: String }],
-    nameMeeting: { type: String, required: true, unique: true },
+    nameMeeting: { type: String, required: true },
     title: { type: String },
     duration: { type: String },
     intervals: { type: String },
