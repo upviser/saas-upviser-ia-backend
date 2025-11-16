@@ -128,15 +128,15 @@ cron.schedule("0 0 * * *", async () => {
                         break
                     case 'Avanzado':
                         updates.emails = 2000
-                        updates.textAI = 100
+                        updates.textAI = 80
                         updates.imagesAI = 40
                         updates.conversationsAI = 200
                         break
                     case 'Profesional':
                         updates.emails = 4000
-                        updates.textAI = 200
+                        updates.textAI = 160
                         updates.imagesAI = 80
-                        updates.videosAI = 30
+                        updates.videosAI = 20
                         updates.conversationsAI = 400
                         break
                     default:
