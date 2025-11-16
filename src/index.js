@@ -123,25 +123,21 @@ cron.schedule("0 0 * * *", async () => {
                 // Aplicar el plan correspondiente
                 switch (account.plan) {
                     case 'Esencial':
-                        updates.emails = 1500
-                        updates.textAI = 100
-                        updates.imagesAI = 40
-                        updates.videosAI = 15
-                        updates.conversationsAI = 250
+                        updates.emails = 1000
+                        updates.conversationsAI = 100
                         break
                     case 'Avanzado':
-                        updates.emails = 3500
+                        updates.emails = 2000
+                        updates.textAI = 100
+                        updates.imagesAI = 40
+                        updates.conversationsAI = 200
+                        break
+                    case 'Profesional':
+                        updates.emails = 4000
                         updates.textAI = 200
                         updates.imagesAI = 80
                         updates.videosAI = 30
-                        updates.conversationsAI = 600
-                        break
-                    case 'Profesional':
-                        updates.emails = 6000
-                        updates.textAI = 400
-                        updates.imagesAI = 160
-                        updates.videosAI = 60
-                        updates.conversationsAI = 1500
+                        updates.conversationsAI = 400
                         break
                     default:
                         updates.emails = 0
